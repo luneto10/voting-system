@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/luneto10/voting-system/api/dto"
 	"github.com/luneto10/voting-system/api/model"
-	"github.com/luneto10/voting-system/api/request"
 	"github.com/luneto10/voting-system/internal/schema"
 	"github.com/luneto10/voting-system/internal/service"
 )
@@ -19,7 +19,7 @@ func NewFormHandler(formService *service.FormService) *FormHandler {
 }
 
 func (h *FormHandler) CreateForm(c *gin.Context) {
-	req := request.CreateFormRequest{}
+	req := dto.CreateFormRequest{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		schema.SendError(c, http.StatusBadRequest, err.Error())
@@ -47,4 +47,21 @@ func (h *FormHandler) CreateForm(c *gin.Context) {
 	}
 
 	schema.SendSuccess(c, "create-form", created)
+}
+
+func (h *FormHandler) GetForm(c *gin.Context) {
+	id := c.Param("id")
+
+	form, err := h.formService.GetForm(id)
+	if err != nil {
+		schema.SendError(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	response := dto.GetFormResponse{
+		ID:    form.ID,
+		Title: form.Title,
+	}
+
+	schema.SendSuccess(c, "get-form", response)
 }

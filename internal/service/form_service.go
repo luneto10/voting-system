@@ -24,3 +24,11 @@ func (s *FormService) CreateForm(f *model.Form) (*model.Form, error) {
 	}
 	return f, nil
 }
+
+func (s *FormService) GetForm(id string) (*model.Form, error) {
+	form, err := s.formRepository.GetForm(id)
+	if err != nil {
+		return nil, err
+	}
+	return form, nil
+}

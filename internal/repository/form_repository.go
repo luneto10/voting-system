@@ -16,3 +16,11 @@ func NewFormRepository(db *gorm.DB) *FormRepository {
 func (r *FormRepository) CreateForm(form *model.Form) error {
 	return r.db.Create(form).Error
 }
+
+func (r *FormRepository) GetForm(id string) (*model.Form, error) {
+	var form model.Form
+	if err := r.db.First(&form, id).Error; err != nil {
+		return nil, err
+	}
+	return &form, nil
+}

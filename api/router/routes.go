@@ -9,6 +9,7 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 	{
 		form := v1.Group("/forms")
 		{
+			form.GET("/:id", handlers.FormHandler.GetForm)
 			form.POST("", handlers.FormHandler.CreateForm)
 		}
 	}
