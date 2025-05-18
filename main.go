@@ -9,7 +9,6 @@ var (
 	logger *config.Logger
 )
 
-
 func main() {
 	logger = config.NewLogger("Voting System")
 
