@@ -2,13 +2,12 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/luneto10/voting-system/internal/config"
+	"gorm.io/gorm"
 )
 
-func Initialize() {
+func Initialize(db *gorm.DB) {
 	router := gin.Default()
-	
-	db := config.GetPostgres()
+
 	handlers := initDependencies(db)
 
 	initializeRoutes(router, handlers)

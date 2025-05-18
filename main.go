@@ -17,5 +17,7 @@ func main() {
 		return
 	}
 
-	router.Initialize()
+	db := config.GetPostgres()
+
+	router.Initialize(db)
 }
