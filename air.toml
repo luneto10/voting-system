@@ -1,0 +1,48 @@
+# Config file for Air live reload (https://github.com/cosmtrek/air)
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# The command to execute to build the project
+cmd = "go build -o ./tmp/main ."
+# Binary file yields from `cmd`
+bin = "tmp/main"
+# Customize binary
+full_bin = "./tmp/main"
+# Watch these directories for changes
+include_dir = ["internal", "api", "cmd"]
+# Exclude files/directories from being watched
+exclude_dir = ["tmp", ".git", "vendor"]
+# Watch these file extensions
+include_ext = ["go", "env", "toml"]
+# Exclude file extensions
+exclude_file = []
+# Clean up stale binary files on reloading
+clean = true
+# This log file stores build errors
+log = "air.log"
+# Use polling instead of watching files
+poll = false
+# Poll interval (in milliseconds)
+poll_interval = 500
+# Kill process before build is finished
+kill_delay = "0s"
+# Send interrupt signal before killing process
+send_interrupt = false
+# Stop watching after delay (in milliseconds)
+delay = 1000
+
+[log]
+# Show log time
+time = true
+
+[color]
+# Customize colors
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+
+[misc]
+# Delete tmp directory on exit
+clean_on_exit = true 
