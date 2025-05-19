@@ -1,10 +1,8 @@
 package service
 
-import (
-	"errors"
-)
+import "errors"
 
-// Form errors
 var (
 	ErrInvalidTitle = errors.New("title must be at least 5 characters long")
+	ErrFormNotFound = errors.New("form not found")
 )

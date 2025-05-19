@@ -1,8 +1,11 @@
 package service
 
 import (
+	"github.com/jinzhu/copier"
+	"github.com/luneto10/voting-system/api/dto"
 	"github.com/luneto10/voting-system/api/model"
 	"github.com/luneto10/voting-system/internal/repository"
+	"github.com/luneto10/voting-system/internal/validation"
 )
 
 type FormService struct {
@@ -14,9 +17,8 @@ func NewFormService(formRepository *repository.FormRepository) *FormService {
 }
 
 func (s *FormService) CreateForm(f *model.Form) (*model.Form, error) {
-
-	if len(f.Title) < 5 {
-		return nil, ErrInvalidTitle
+	if err := validation.ValidateStruct(f); err != nil {
+		return nil, err
 	}
 
 	if err := s.formRepository.CreateForm(f); err != nil {
@@ -28,7 +30,23 @@ func (s *FormService) CreateForm(f *model.Form) (*model.Form, error) {
 func (s *FormService) GetForm(id string) (*model.Form, error) {
 	form, err := s.formRepository.GetForm(id)
 	if err != nil {
-		return nil, err
+		return nil, ErrFormNotFound
 	}
 	return form, nil
+}
+
+func (s *FormService) UpdateForm(id string, updateForm *dto.UpdateFormRequest) (*model.Form, error) {
+	originalForm, err := s.GetForm(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := copier.Copy(&originalForm, &updateForm); err != nil {
+		return nil, err
+	}
+
+	if err := s.formRepository.UpdateForm(id, originalForm); err != nil {
+		return nil, err
+	}
+	return originalForm, nil
 }
