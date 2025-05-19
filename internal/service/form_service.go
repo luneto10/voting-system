@@ -5,7 +5,6 @@ import (
 	"github.com/luneto10/voting-system/api/dto"
 	"github.com/luneto10/voting-system/api/model"
 	"github.com/luneto10/voting-system/internal/repository"
-	"github.com/luneto10/voting-system/internal/validation"
 )
 
 type FormService struct {
@@ -17,10 +16,6 @@ func NewFormService(formRepository *repository.FormRepository) *FormService {
 }
 
 func (s *FormService) CreateForm(f *model.Form) (*model.Form, error) {
-	if err := validation.ValidateStruct(f); err != nil {
-		return nil, err
-	}
-
 	if err := s.formRepository.CreateForm(f); err != nil {
 		return nil, err
 	}

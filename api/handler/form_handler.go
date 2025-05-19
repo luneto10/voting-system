@@ -87,7 +87,12 @@ func (h *FormHandler) UpdateForm(c *gin.Context) {
 
 	updated, err := h.formService.UpdateForm(id, &req)
 	if err != nil {
-		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		switch err {
+		case service.ErrFormNotFound:
+			schema.SendError(c, http.StatusNotFound, err.Error())
+		default:
+			schema.SendError(c, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 
