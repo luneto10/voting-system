@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"github.com/jinzhu/copier"
 	"github.com/luneto10/voting-system/api/dto"
 	"github.com/luneto10/voting-system/api/model"
 	"github.com/luneto10/voting-system/internal/schema"
@@ -18,35 +20,43 @@ func NewFormHandler(formService *service.FormService) *FormHandler {
 	return &FormHandler{formService: formService}
 }
 
+func (h *FormHandler) bindAndValidate(c *gin.Context, req any) bool {
+	if err := c.ShouldBindJSON(req); err != nil {
+		if ve, ok := err.(validator.ValidationErrors); ok {
+			schema.SendValidationError(c, ve)
+		} else {
+			schema.SendError(c, http.StatusBadRequest, err.Error())
+		}
+		return false
+	}
+	return true
+}
+
 func (h *FormHandler) CreateForm(c *gin.Context) {
-	req := dto.CreateFormRequest{}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		schema.SendError(c, http.StatusBadRequest, err.Error())
+	var req dto.CreateFormRequest
+	if ok := h.bindAndValidate(c, &req); !ok {
 		return
 	}
 
-	if err := req.Validate(); err != nil {
-		schema.SendValidationError(c, err)
+	form := &model.Form{}
+	if err := copier.Copy(form, &req); err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
 		return
-	}
-
-	form := &model.Form{
-		Title: req.Title,
 	}
 
 	created, err := h.formService.CreateForm(form)
 	if err != nil {
-		switch err {
-		case service.ErrInvalidTitle:
-			schema.SendError(c, http.StatusUnprocessableEntity, err.Error())
-		default:
-			schema.SendError(c, http.StatusInternalServerError, err.Error())
-		}
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	schema.SendSuccess(c, "create-form", created)
+	var resp dto.GetFormResponse
+	if err := copier.Copy(&resp, created); err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	schema.SendSuccess(c, "create-form", resp)
 }
 
 func (h *FormHandler) GetForm(c *gin.Context) {
@@ -58,10 +68,35 @@ func (h *FormHandler) GetForm(c *gin.Context) {
 		return
 	}
 
-	response := dto.GetFormResponse{
-		ID:    form.ID,
-		Title: form.Title,
+	var resp dto.GetFormResponse
+	if err := copier.Copy(&resp, form); err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
 	}
 
-	schema.SendSuccess(c, "get-form", response)
+	schema.SendSuccess(c, "get-form", resp)
 }
+
+func (h *FormHandler) UpdateForm(c *gin.Context) {
+	id := c.Param("id")
+
+	var req dto.UpdateFormRequest
+	if ok := h.bindAndValidate(c, &req); !ok {
+		return
+	}
+
+	updated, err := h.formService.UpdateForm(id, &req)
+	if err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	var resp dto.GetFormResponse
+	if err := copier.Copy(&resp, updated); err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	schema.SendSuccess(c, "update-form", resp)
+}
+

@@ -6,5 +6,5 @@ import (
 
 type Form struct {
 	gorm.Model
-	Title string `gorm:"not null"`
+	Title string `gorm:"not null" validate:"required,min=5,max=100"`
 }

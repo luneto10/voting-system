@@ -11,6 +11,7 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 		{
 			form.GET("/:id", handlers.FormHandler.GetForm)
 			form.POST("", handlers.FormHandler.CreateForm)
+			form.PUT("/:id", handlers.FormHandler.UpdateForm)
 		}
 	}
 }

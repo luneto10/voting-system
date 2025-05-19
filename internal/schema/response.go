@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/luneto10/voting-system/internal/validator"
+	"github.com/luneto10/voting-system/internal/validation"
 )
 
 func SendError(ctx *gin.Context, code int, msg string) {
@@ -26,7 +26,7 @@ func SendSuccess(ctx *gin.Context, op string, data any) {
 }
 
 func SendValidationError(ctx *gin.Context, err error) {
-	errors := validator.FormatErrors(err)
+	errors := validation.FormatErrors(err)
 	ctx.Header("Content-type", "application/json")
 	ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 		"errors": errors,
