@@ -30,7 +30,14 @@ func InitializePostgres() (*gorm.DB, error) {
 
 	logger.Infof("postgres initialized successfully")
 
-	db.AutoMigrate(&model.Form{})
+	db.AutoMigrate(
+		&model.Form{},
+		&model.Question{},
+		&model.Option{},
+		&model.Answer{},
+		&model.User{},
+		&model.Submission{},
+	)
 
 	return db, nil
 }
