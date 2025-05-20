@@ -13,5 +13,11 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 			form.POST("", handlers.FormHandler.CreateForm)
 			form.PUT("/:id", handlers.FormHandler.UpdateForm)
 		}
+
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/register", handlers.AuthHandler.Register)
+			auth.POST("/login", handlers.AuthHandler.Login)
+		}
 	}
 }

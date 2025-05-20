@@ -11,7 +11,7 @@ const (
 
 type User struct {
 	gorm.Model
-	Email       string       `gorm:"not null;unique"`
+	Email       string       `gorm:"not null;unique;index"`
 	Password    string       `gorm:"not null"`
 	Role        UserRole     `gorm:"not null;default:user"`
 	Submissions []Submission `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
