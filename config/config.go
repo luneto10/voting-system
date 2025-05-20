@@ -8,6 +8,7 @@ import (
 type Config struct {
 	DB  DBConfig
 	Log LogConfig
+	JWT JWTConfig
 }
 
 // DBConfig holds database configuration values.
@@ -23,6 +24,10 @@ type DBConfig struct {
 type LogConfig struct {
 	Level  string
 	Format string
+}
+
+type JWTConfig struct {
+	SecretKey string
 }
 
 // LoadConfig loads configuration from environment variables.

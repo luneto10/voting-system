@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -8,24 +9,18 @@ import (
 	"github.com/luneto10/voting-system/internal/helper"
 )
 
-const (
-	SecretKey = "secret"
+var (
+	SecretKey    = os.Getenv("JWT_SECRET_KEY")
 	TokenExpired = time.Hour
 )
 
-type JWTToken struct {
-	SecretKey string
-	Token     string
-	ExpiresAt time.Time
-}
-
 func GenerateToken(user *model.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, 
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
-			"iss": "http://localhost:8080",
-			"sub": user.ID,
+			"iss":   "http://localhost:8080",
+			"sub":   user.ID,
 			"email": user.Email,
-			"exp": time.Now().Add(TokenExpired).Unix(),
+			"exp":   time.Now().Add(TokenExpired).Unix(),
 		})
 
 	return token.SignedString([]byte(SecretKey))
@@ -42,6 +37,6 @@ func ValidateToken(tokenString string) (*jwt.Token, error) {
 	if !token.Valid {
 		return nil, helper.ErrInvalidToken
 	}
-
+	
 	return token, nil
 }
