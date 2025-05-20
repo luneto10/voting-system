@@ -14,8 +14,8 @@ type GetFormResponse struct {
 type CreateFormRequest struct {
 	Title       string                  `json:"title" binding:"required,min=5,max=100"`
 	Description *string                 `json:"description"`
-	StartAt     *time.Time              `json:"startAt" binding:"omitempty,datetime=2006-01-02T15:04:05Z"`
-	EndAt       *time.Time              `json:"endAt" binding:"omitempty,datetime=2006-01-02T15:04:05Z"`
+	StartAt     *time.Time              `json:"startAt" binding:"omitempty"`
+	EndAt       *time.Time              `json:"endAt" binding:"omitempty"`
 	Questions   []CreateQuestionRequest `json:"questions" binding:"required,dive"`
 }
 
