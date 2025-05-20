@@ -1,23 +1,34 @@
 package main
 
 import (
-	"github.com/luneto10/voting-system/api/router"
-	"github.com/luneto10/voting-system/internal/config"
-)
+	"log"
 
-var (
-	logger *config.Logger
+	"github.com/luneto10/voting-system/api/router"
+	"github.com/luneto10/voting-system/config"
+	"github.com/luneto10/voting-system/internal/db"
+	applog "github.com/luneto10/voting-system/internal/log"
 )
 
 func main() {
-	logger = config.NewLogger("Voting System")
-
-	if err := config.Init(); err != nil {
-		logger.Errorf("error initializing config: %v", err)
-		return
+	// Load configuration
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	db := config.GetPostgres()
+	// Initialize logger
+	logger := applog.NewLogger(cfg.Log)
+	logger.Info("Logger initialized")
 
-	router.Initialize(db)
+	// Initialize database
+	database, err := db.InitializePostgres(cfg.DB)
+	if err != nil {
+		logger.Errorf("Failed to initialize database: %v", err)
+		return
+	}
+	logger.Info("Database initialized")
+
+	// Initialize router
+	router.Initialize(database)
+
 }

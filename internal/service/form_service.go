@@ -33,7 +33,7 @@ func (s *FormService) GetForm(id string) (*model.Form, error) {
 func (s *FormService) UpdateForm(id string, updateForm *dto.UpdateFormRequest) (*model.Form, error) {
 	originalForm, err := s.GetForm(id)
 	if err != nil {
-		return nil, err
+		return nil, ErrFormNotFound
 	}
 
 	if err := copier.Copy(&originalForm, &updateForm); err != nil {

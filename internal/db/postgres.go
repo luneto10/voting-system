@@ -1,34 +1,23 @@
-package config
+package db
 
 import (
 	"fmt"
 
 	"github.com/luneto10/voting-system/api/model"
+	"github.com/luneto10/voting-system/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type DBConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
-}
-
-func InitializePostgres() (*gorm.DB, error) {
-	logger := NewLogger("Postgres")
-	config := GetConfig()
+// NewDB initializes a new database connection using the provided DBConfig.
+func InitializePostgres(cfg config.DBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.Host, config.Port, config.User, config.Password, config.DBName)
+		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		logger.Errorf("error initializing postgres: %v", err)
 		return nil, fmt.Errorf("error initializing postgres: %v", err)
 	}
-
-	logger.Infof("postgres initialized successfully")
 
 	db.AutoMigrate(
 		&model.Form{},

@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/luneto10/voting-system/api/model"
+	"github.com/luneto10/voting-system/internal/helper"
 	"github.com/luneto10/voting-system/internal/helper/auth"
 	"github.com/luneto10/voting-system/internal/repository"
 	"gorm.io/gorm"
@@ -29,7 +30,7 @@ func (s *AuthService) Register(user *model.User) (*model.User, error) {
 	}
 
 	// Hash password
-	if user.Password, err = auth.HashPassword(user.Password); err != nil {
+	if user.Password, err = helper.HashPassword(user.Password); err != nil {
 		return nil, err
 	}
 
@@ -46,12 +47,15 @@ func (s *AuthService) Login(email, password string) (*model.User, string, error)
 		return nil, "", ErrInvalidCredentials
 	}
 
-	if err := auth.ComparePassword(user.Password, password); err != nil {
+	if err := helper.ComparePassword(user.Password, password); err != nil {
 		return nil, "", ErrInvalidCredentials
 	}
 
 	// TODO: Generate token
-	token := "teste"
+	token, err := auth.GenerateToken(user)
+	if err != nil {
+		return nil, "", err
+	}
 
 	return user, token, nil
 }

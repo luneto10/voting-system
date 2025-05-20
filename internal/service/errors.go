@@ -7,4 +7,5 @@ var (
 	ErrFormNotFound = errors.New("form not found")
 	ErrUserAlreadyExists = errors.New("user already exists")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrInvalidForm = errors.New("invalid form")
 )
