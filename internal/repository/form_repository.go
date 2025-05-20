@@ -19,7 +19,9 @@ func (r *FormRepository) CreateForm(form *model.Form) error {
 
 func (r *FormRepository) GetForm(id string) (*model.Form, error) {
 	var form model.Form
-	if err := r.db.First(&form, id).Error; err != nil {
+	if err := r.db.
+		Preload("Questions.Options").
+		First(&form, id).Error; err != nil {
 		return nil, err
 	}
 	return &form, nil

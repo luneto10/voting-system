@@ -3,10 +3,42 @@ package dto
 import "time"
 
 type UpdateFormRequest struct {
-	Title *string `json:"title" binding:"omitempty,min=5,max=100"`
+	Title       *string `json:"title" binding:"omitempty,min=5,max=100"`
+	Description *string `json:"description" binding:"omitempty"`
+	StartAt     *time.Time `json:"startAt" binding:"omitempty"`
+	EndAt       *time.Time `json:"endAt" binding:"omitempty"`
+	Questions   []UpdateQuestionRequest `json:"questions" binding:"omitempty,dive"`
+}
+
+type UpdateQuestionRequest struct {
+	ID      uint                `json:"id" binding:"required"`
+	Title   *string             `json:"title" binding:"omitempty"`
+	Type    *string             `json:"type" binding:"omitempty"`
+	Options []UpdateOptionRequest `json:"options" binding:"omitempty,dive"`
+}
+
+type UpdateOptionRequest struct {
+	ID    uint   `json:"id" binding:"required"`
+	Title string `json:"title" binding:"omitempty"`
 }
 
 type GetFormResponse struct {
+	ID          uint                  `json:"id"`
+	Title       string                `json:"title"`
+	Description string                `json:"description"`
+	StartAt     time.Time             `json:"startAt"`
+	EndAt       time.Time             `json:"endAt"`
+	Questions   []GetQuestionResponse `json:"questions"`
+}
+
+type GetQuestionResponse struct {
+	ID      uint                `json:"id"`
+	Title   string              `json:"title"`
+	Type    string              `json:"type"`
+	Options []GetOptionResponse `json:"options"`
+}
+
+type GetOptionResponse struct {
 	ID    uint   `json:"id"`
 	Title string `json:"title"`
 }
