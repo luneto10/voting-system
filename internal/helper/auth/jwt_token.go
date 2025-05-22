@@ -11,10 +11,10 @@ import (
 
 var (
 	SecretKey    = os.Getenv("JWT_SECRET_KEY")
-	TokenExpired = time.Hour
+	TokenExpired = 30 * time.Second
 )
 
-func GenerateToken(user *model.User) (string, error) {
+func GenerateJWT(user *model.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"iss":   "http://localhost:8080",
@@ -37,6 +37,6 @@ func ValidateToken(tokenString string) (*jwt.Token, error) {
 	if !token.Valid {
 		return nil, helper.ErrInvalidToken
 	}
-	
+
 	return token, nil
 }

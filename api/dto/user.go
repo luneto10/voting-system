@@ -13,5 +13,23 @@ type GetUserResponse struct {
 
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	Password string `json:"password" binding:"required"`
+}
+
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type RefreshTokenResponse struct {
+	AccessToken string `json:"access_token"`
+}
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type LoginResponse struct {
+	User         GetUserResponse `json:"user"`
+	AccessToken  string          `json:"access_token"`
+	RefreshToken string          `json:"refresh_token"`
 }

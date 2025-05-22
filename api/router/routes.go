@@ -21,6 +21,8 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 		{
 			auth.POST("/register", handlers.AuthHandler.Register)
 			auth.POST("/login", handlers.AuthHandler.Login)
+			auth.POST("/refresh", handlers.AuthHandler.RefreshToken)
+			auth.POST("/logout", handlers.AuthHandler.Logout)
 		}
 	}
 }
