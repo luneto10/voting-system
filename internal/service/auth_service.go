@@ -15,6 +15,7 @@ type AuthService interface {
 	Login(email, password string) (*model.User, string, string, error)
 	RefreshToken(refreshToken string) (string, error)
 	Logout(refreshToken string) error
+	GetUserByEmail(email string) (*model.User, error)
 }
 
 type AuthServiceImpl struct {
@@ -124,4 +125,12 @@ func (s *AuthServiceImpl) RefreshToken(refreshToken string) (string, error) {
 
 func (s *AuthServiceImpl) Logout(refreshToken string) error {
 	return s.refreshTokenRepository.RevokeRefreshToken(refreshToken)
+}
+
+func (s *AuthServiceImpl) GetUserByEmail(email string) (*model.User, error) {
+	user, err := s.userRepository.GetUserByEmail(email)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+	return user, nil
 }

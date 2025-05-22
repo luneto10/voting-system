@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -12,11 +13,12 @@ import (
 )
 
 type FormHandler struct {
+	authService service.AuthService
 	formService service.FormService
 }
 
-func NewFormHandler(formService service.FormService) *FormHandler {
-	return &FormHandler{formService: formService}
+func NewFormHandler(formService service.FormService, authService service.AuthService) *FormHandler {
+	return &FormHandler{formService: formService, authService: authService}
 }
 
 func (h *FormHandler) CreateForm(c *gin.Context) {
@@ -47,9 +49,14 @@ func (h *FormHandler) CreateForm(c *gin.Context) {
 }
 
 func (h *FormHandler) GetForm(c *gin.Context) {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		schema.SendError(c, http.StatusBadRequest, "invalid form ID")
+		return
+	}
 
-	form, err := h.formService.GetForm(id)
+	form, err := h.formService.GetForm(uint(id))
 	if err != nil {
 		schema.SendError(c, http.StatusNotFound, err.Error())
 		return
@@ -65,14 +72,19 @@ func (h *FormHandler) GetForm(c *gin.Context) {
 }
 
 func (h *FormHandler) UpdateForm(c *gin.Context) {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		schema.SendError(c, http.StatusBadRequest, "invalid form ID")
+		return
+	}
 
 	req := new(dto.UpdateFormRequest)
 	if ok := bindAndValidate(c, &req); !ok {
 		return
 	}
 
-	updated, err := h.formService.UpdateForm(id, req)
+	updated, err := h.formService.UpdateForm(uint(id), req)
 	if err != nil {
 		switch err {
 		case service.ErrFormNotFound:
@@ -90,4 +102,75 @@ func (h *FormHandler) UpdateForm(c *gin.Context) {
 	}
 
 	schema.SendSuccess(c, "update-form", resp)
+}
+
+func (h *FormHandler) SubmitForm(c *gin.Context) {
+	formIDStr := c.Param("id")
+	formID, err := strconv.ParseUint(formIDStr, 10, 64)
+	if err != nil {
+		schema.SendError(c, http.StatusBadRequest, "invalid form ID")
+		return
+	}
+	userID := c.GetUint("user_id")
+
+	req := new(dto.SubmitFormRequest)
+	if ok := bindAndValidate(c, &req); !ok {
+		return
+	}
+
+	submission, err := h.formService.SubmitForm(uint(formID), userID, req.Answers)
+	if err != nil {
+		switch err {
+		case service.ErrFormNotFound:
+			schema.SendError(c, http.StatusNotFound, err.Error())
+		case service.ErrSubmissionAlreadyExists:
+			schema.SendError(c, http.StatusBadRequest, err.Error())
+		default:
+			schema.SendError(c, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	resp := new(dto.SubmitFormResponse)
+	if err := copier.Copy(resp, submission); err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	schema.SendSuccess(c, "submit-form", resp)
+}
+
+func (h *FormHandler) UserSubmittedForm(c *gin.Context) {
+	formIDStr := c.Param("id")
+	formID, err := strconv.ParseUint(formIDStr, 10, 64)
+	if err != nil {
+		schema.SendError(c, http.StatusBadRequest, "invalid form ID")
+		return
+	}
+
+	email := c.Query("email")
+	if email == "" {
+		schema.SendError(c, http.StatusBadRequest, "email query parameter is required")
+		return
+	}
+
+	user, err := h.authService.GetUserByEmail(email)
+	if err != nil && err != service.ErrUserNotFound {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if user == nil {
+		schema.SendSuccess(c, "user-submitted-form", gin.H{"submitted": false})
+		return
+	}
+
+	submitted, err := h.formService.UserSubmittedForm(uint(formID), user.ID)
+	if err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	schema.SendSuccess(c, "user-submitted-form", gin.H{"submitted": submitted})
+
 }

@@ -10,11 +10,13 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 
 	v1 := router.Group(basePath)
 	{
-		form := v1.Group("/forms", middleware.AuthMiddleware())
+		form := v1.Group("/forms")
 		{
-			form.GET("/:id", handlers.FormHandler.GetForm)
-			form.POST("", handlers.FormHandler.CreateForm)
-			form.PUT("/:id", handlers.FormHandler.UpdateForm)
+			form.GET("/:id", middleware.AuthMiddleware(), handlers.FormHandler.GetForm)
+			form.POST("", middleware.AuthMiddleware(), handlers.FormHandler.CreateForm)
+			form.PUT("/:id", middleware.AuthMiddleware(), handlers.FormHandler.UpdateForm)
+			form.POST("/:id/submit", middleware.AuthMiddleware(), handlers.FormHandler.SubmitForm)
+			form.GET("/:id/hasvoted", middleware.AuthMiddleware(), handlers.FormHandler.UserSubmittedForm)
 		}
 
 		auth := v1.Group("/auth")

@@ -65,7 +65,7 @@ func initServices(repos *Repositories) *Services {
 
 // initHandlers initializes all handlers with their required services
 func initHandlers(services *Services) *Handler {
-	formHandler := handler.NewFormHandler(services.FormService)
+	formHandler := handler.NewFormHandler(services.FormService, services.AuthService)
 	authHandler := handler.NewAuthHandler(services.AuthService)
 
 	return &Handler{

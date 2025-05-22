@@ -3,17 +3,17 @@ package dto
 import "time"
 
 type UpdateFormRequest struct {
-	Title       *string `json:"title" binding:"omitempty,min=5,max=100"`
-	Description *string `json:"description" binding:"omitempty"`
-	StartAt     *time.Time `json:"startAt" binding:"omitempty"`
-	EndAt       *time.Time `json:"endAt" binding:"omitempty"`
+	Title       *string                 `json:"title" binding:"omitempty,min=5,max=100"`
+	Description *string                 `json:"description" binding:"omitempty"`
+	StartAt     *time.Time              `json:"startAt" binding:"omitempty"`
+	EndAt       *time.Time              `json:"endAt" binding:"omitempty"`
 	Questions   []UpdateQuestionRequest `json:"questions" binding:"omitempty,dive"`
 }
 
 type UpdateQuestionRequest struct {
-	ID      uint                `json:"id" binding:"required"`
-	Title   *string             `json:"title" binding:"omitempty"`
-	Type    *string             `json:"type" binding:"omitempty"`
+	ID      uint                  `json:"id" binding:"required"`
+	Title   *string               `json:"title" binding:"omitempty"`
+	Type    *string               `json:"type" binding:"omitempty"`
 	Options []UpdateOptionRequest `json:"options" binding:"omitempty,dive"`
 }
 
@@ -59,4 +59,21 @@ type CreateQuestionRequest struct {
 
 type CreateOptionRequest struct {
 	Title string `json:"title" binding:"required"`
+}
+
+type SubmitFormRequest struct {
+	Answers []AnswerSubmission `json:"answers" binding:"required"`
+}
+
+type AnswerSubmission struct {
+	QuestionID uint   `json:"question_id" binding:"required"`
+	OptionIDs  []uint `json:"option_ids,omitempty"`
+	Text       string `json:"text,omitempty"`
+}
+
+type SubmitFormResponse struct {
+	ID          uint      `json:"id"`
+	FormID      uint      `json:"form_id"`
+	UserID      uint      `json:"user_id"`
+	CompletedAt time.Time `json:"completed_at"`
 }

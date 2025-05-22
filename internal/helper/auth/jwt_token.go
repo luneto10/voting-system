@@ -11,7 +11,7 @@ import (
 
 var (
 	SecretKey    = os.Getenv("JWT_SECRET_KEY")
-	TokenExpired = 30 * time.Second
+	TokenExpired = 15 * time.Hour
 )
 
 func GenerateJWT(user *model.User) (string, error) {
