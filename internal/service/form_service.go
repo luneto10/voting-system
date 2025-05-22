@@ -7,22 +7,28 @@ import (
 	"github.com/luneto10/voting-system/internal/repository"
 )
 
-type FormService struct {
-	formRepository *repository.FormRepository
+type FormService interface {
+	CreateForm(f *model.Form) (*model.Form, error)
+	GetForm(id string) (*model.Form, error)
+	UpdateForm(id string, updateForm *dto.UpdateFormRequest) (*model.Form, error)
 }
 
-func NewFormService(formRepository *repository.FormRepository) *FormService {
-	return &FormService{formRepository: formRepository}
+type FormServiceImpl struct {
+	formRepository repository.FormRepository
 }
 
-func (s *FormService) CreateForm(f *model.Form) (*model.Form, error) {
+func NewFormService(formRepository repository.FormRepository) FormService {
+	return &FormServiceImpl{formRepository: formRepository}
+}
+
+func (s *FormServiceImpl) CreateForm(f *model.Form) (*model.Form, error) {
 	if err := s.formRepository.CreateForm(f); err != nil {
 		return nil, err
 	}
 	return f, nil
 }
 
-func (s *FormService) GetForm(id string) (*model.Form, error) {
+func (s *FormServiceImpl) GetForm(id string) (*model.Form, error) {
 	form, err := s.formRepository.GetForm(id)
 	if err != nil {
 		return nil, ErrFormNotFound
@@ -30,7 +36,7 @@ func (s *FormService) GetForm(id string) (*model.Form, error) {
 	return form, nil
 }
 
-func (s *FormService) UpdateForm(id string, updateForm *dto.UpdateFormRequest) (*model.Form, error) {
+func (s *FormServiceImpl) UpdateForm(id string, updateForm *dto.UpdateFormRequest) (*model.Form, error) {
 	originalForm, err := s.GetForm(id)
 	if err != nil {
 		return nil, ErrFormNotFound

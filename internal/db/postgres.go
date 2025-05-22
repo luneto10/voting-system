@@ -9,6 +9,16 @@ import (
 	"gorm.io/gorm"
 )
 
+type Database interface {
+	GetDB() *gorm.DB
+	Close() error
+}
+
+// PostgresDB implements the Database interface
+type PostgresDB struct {
+	db *gorm.DB
+}
+
 // NewDB initializes a new database connection using the provided DBConfig.
 func InitializePostgres(cfg config.DBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -26,7 +36,20 @@ func InitializePostgres(cfg config.DBConfig) (*gorm.DB, error) {
 		&model.Answer{},
 		&model.User{},
 		&model.Submission{},
+		&model.RefreshToken{},
 	)
 
 	return db, nil
+}
+
+func (p *PostgresDB) GetDB() *gorm.DB {
+	return p.db
+}
+
+func (p *PostgresDB) Close() error {
+	sqlDB, err := p.db.DB()
+	if err != nil {
+		return fmt.Errorf("error getting underlying *sql.DB: %v", err)
+	}
+	return sqlDB.Close()
 }

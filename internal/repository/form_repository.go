@@ -5,19 +5,26 @@ import (
 	"gorm.io/gorm"
 )
 
-type FormRepository struct {
+type FormRepository interface {
+	CreateForm(form *model.Form) error
+	GetForm(id string) (*model.Form, error)
+	UpdateForm(id string, form *model.Form) error
+	DeleteForm(id string) error
+}
+
+type FormRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func NewFormRepository(db *gorm.DB) *FormRepository {
-	return &FormRepository{db: db}
+func NewFormRepository(db *gorm.DB) FormRepository {
+	return &FormRepositoryImpl{db: db}
 }
 
-func (r *FormRepository) CreateForm(form *model.Form) error {
+func (r *FormRepositoryImpl) CreateForm(form *model.Form) error {
 	return r.db.Create(form).Error
 }
 
-func (r *FormRepository) GetForm(id string) (*model.Form, error) {
+func (r *FormRepositoryImpl) GetForm(id string) (*model.Form, error) {
 	var form model.Form
 	if err := r.db.
 		Preload("Questions.Options").
@@ -27,10 +34,10 @@ func (r *FormRepository) GetForm(id string) (*model.Form, error) {
 	return &form, nil
 }
 
-func (r *FormRepository) UpdateForm(id string, form *model.Form) error {
+func (r *FormRepositoryImpl) UpdateForm(id string, form *model.Form) error {
 	return r.db.Save(form).Error
 }
 
-func (r *FormRepository) DeleteForm(id string) error {
+func (r *FormRepositoryImpl) DeleteForm(id string) error {
 	return r.db.Delete(&model.Form{}, id).Error
 }

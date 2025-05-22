@@ -12,10 +12,10 @@ import (
 )
 
 type AuthHandler struct {
-	authService *service.AuthService
+	authService service.AuthService
 }
 
-func NewAuthHandler(authService *service.AuthService) *AuthHandler {
+func NewAuthHandler(authService service.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
@@ -52,22 +52,63 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, token, err := h.authService.Login(req.Email, req.Password)
+	user, jwtToken, refreshToken, err := h.authService.Login(req.Email, req.Password)
 	if err != nil {
-		schema.SendError(c, http.StatusUnauthorized, err.Error())
+		schema.SendError(c, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 
-	c.SetCookie("token", token, 0, "/", "", false, true)
-
-	resp := new(dto.GetUserResponse)
-	if err := copier.Copy(resp, user); err != nil {
+	userResp := new(dto.GetUserResponse)
+	if err := copier.Copy(userResp, user); err != nil {
 		schema.SendError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	schema.SendSuccess(c, "login", gin.H{
-		"user":  resp,
-		"token": token,
-	})
+	// Set the JWT in cookie
+	c.SetCookie("token", jwtToken, 0, "/", "", false, true)
+
+	resp := &dto.LoginResponse{
+		User:         *userResp,
+		AccessToken:  jwtToken,
+		RefreshToken: refreshToken,
+	}
+
+	schema.SendSuccess(c, "login", resp)
+}
+
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	req := new(dto.RefreshTokenRequest)
+	if ok := bindAndValidate(c, &req); !ok {
+		return
+	}
+
+	newJWT, err := h.authService.RefreshToken(req.RefreshToken)
+	if err != nil {
+		schema.SendError(c, http.StatusUnauthorized, "Invalid refresh token")
+		return
+	}
+
+	c.SetCookie("token", newJWT, 0, "/", "", false, true)
+
+	resp := &dto.RefreshTokenResponse{
+		AccessToken: newJWT,
+	}
+
+	schema.SendSuccess(c, "refresh", resp)
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	req := new(dto.LogoutRequest)
+	if ok := bindAndValidate(c, &req); !ok {
+		return
+	}
+
+	if err := h.authService.Logout(req.RefreshToken); err != nil {
+		schema.SendError(c, http.StatusInternalServerError, "Failed to logout")
+		return
+	}
+
+	c.SetCookie("token", "", -1, "/", "", false, true)
+
+	schema.SendSuccess(c, "logout", nil)
 }

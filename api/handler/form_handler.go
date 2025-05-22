@@ -12,10 +12,10 @@ import (
 )
 
 type FormHandler struct {
-	formService *service.FormService
+	formService service.FormService
 }
 
-func NewFormHandler(formService *service.FormService) *FormHandler {
+func NewFormHandler(formService service.FormService) *FormHandler {
 	return &FormHandler{formService: formService}
 }
 
