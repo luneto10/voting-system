@@ -1,17 +1,19 @@
 .PHONY: run build clean test tidy
 
+SERVER_DIR = cd Server &&
+
 # Default target
 run:
-	air
+	$(SERVER_DIR) air
 
 build:
-	go build -o bin/app
+	$(SERVER_DIR) go build -o bin/app
 
 test:
-	go test ./...
+	$(SERVER_DIR) go test ./...
 
 tidy:
-	go mod tidy
+	$(SERVER_DIR) go mod tidy
 
 clean:
-	rm -rf bin/ tmp/ 
+	$(SERVER_DIR) rm -rf bin/ tmp/ 
