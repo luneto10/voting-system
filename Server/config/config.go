@@ -6,9 +6,10 @@ import (
 
 // Config holds all configuration values for the application.
 type Config struct {
-	DB  DBConfig
-	Log LogConfig
-	JWT JWTConfig
+	DB          DBConfig
+	Log         LogConfig
+	JWT         JWTConfig
+	FrontendURL string
 }
 
 // DBConfig holds database configuration values.
@@ -48,13 +49,8 @@ func LoadConfig() (*Config, error) {
 			Level:  getEnv("LOG_LEVEL", "info"),
 			Format: getEnv("LOG_FORMAT", "text"),
 		},
+		FrontendURL: getEnv("FRONTEND_URL", "http://localhost:5173"),
 	}
 
 	return cfg, nil
 }
-
-// func GetLogger(p string) *Logger {
-// 	//Init logger
-// 	logger := NewLogger(p)
-// 	return logger
-// }

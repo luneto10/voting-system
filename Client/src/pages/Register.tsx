@@ -15,18 +15,20 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { authApi, User } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
+import { authApi } from '@/lib/api';
 import { toast } from 'sonner';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
-export default function Login() {
+export default function Register() {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -34,34 +36,27 @@ export default function Login() {
     defaultValues: {
       email: '',
       password: '',
+      confirmPassword: '',
     },
   });
 
-  const loginMutation = useMutation({
-    mutationFn: authApi.login,
-    onSuccess: (response) => {
-      if (response.data && response.data.user) {
-        const user: User = response.data.user;
-        setUser(user);
-        toast.success('Login successful');
-        localStorage.setItem('refresh_token', response.data.refresh_token);
-        navigate('/', { replace: true });
-      } else {
-        setError('Invalid response from server');
-      }
+  const registerMutation = useMutation({
+    mutationFn: (data: { email: string; password: string }) => 
+      authApi.register(data),
+    onSuccess: () => {
+      toast.success('Registration successful! Please login.');
+      navigate('/login');
     },
     onError: (error: any) => {
-      console.error('Login error:', error);
-      setError(error.response?.data?.message || 'Invalid email or password');
+      setError(error.response?.data?.message || 'Registration failed');
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setError(null);
-    const refreshToken = localStorage.getItem('refresh_token');
-    loginMutation.mutate({
-      ...values,
-      refresh_token: refreshToken || undefined,
+    registerMutation.mutate({
+      email: values.email,
+      password: values.password,
     });
   }
 
@@ -69,8 +64,8 @@ export default function Login() {
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle>Welcome Back</CardTitle>
-          <CardDescription>Enter your credentials to login</CardDescription>
+          <CardTitle>Create an Account</CardTitle>
+          <CardDescription>Enter your details to create your account</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -101,6 +96,19 @@ export default function Login() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Confirm your password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               {error && (
                 <div className="text-sm text-red-500">
                   {error}
@@ -109,18 +117,18 @@ export default function Login() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loginMutation.isPending}
+                disabled={registerMutation.isPending}
               >
-                {loginMutation.isPending ? 'Logging in...' : 'Login'}
+                {registerMutation.isPending ? 'Creating account...' : 'Create Account'}
               </Button>
             </form>
           </Form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-primary hover:underline">
-              Register here
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary hover:underline">
+              Login here
             </Link>
           </p>
         </CardFooter>

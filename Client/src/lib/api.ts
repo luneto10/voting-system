@@ -8,25 +8,44 @@ const api = axios.create({
 export interface LoginRequest {
   email: string;
   password: string;
+  refresh_token?: string;
 }
 
-export interface LoginResponse {
-  user: {
-    id: number;
-    email: string;
-    role: string;
-  };
+export interface RegisterRequest {
+  email: string;
+  password: string;
+}
+
+export interface User {
+  id: number;
+  email: string;
+  role: string;
+}
+
+export interface LoginResponseData {
+  user: User;
   access_token: string;
   refresh_token: string;
 }
 
+export interface ApiResponse<T> {
+  message: string;
+  data: T;
+}
+
 export const authApi = {
   login: async (data: LoginRequest) => {
-    const response = await api.post<LoginResponse>('/auth/login', data);
+    const response = await api.post<ApiResponse<LoginResponseData>>('/auth/login', data);
+    return response.data;
+  },
+  register: async (data: RegisterRequest) => {
+    const response = await api.post<ApiResponse<{ message: string }>>('/auth/register', data);
     return response.data;
   },
   logout: async () => {
-    await api.post('/auth/logout');
+    await api.post('/auth/logout', {
+      refresh_token: localStorage.getItem('refresh_token'),
+    });
   },
 };
 
