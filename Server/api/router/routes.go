@@ -15,6 +15,8 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 			form.GET("/:id", middleware.AuthMiddleware(), handlers.FormHandler.GetForm)
 			form.POST("", middleware.AuthMiddleware(), handlers.FormHandler.CreateForm)
 			form.PUT("/:id", middleware.AuthMiddleware(), handlers.FormHandler.UpdateForm)
+			form.DELETE("/:id", middleware.AuthMiddleware(), handlers.FormHandler.DeleteForm)
+			form.GET("/user", middleware.AuthMiddleware(), handlers.FormHandler.GetUserForms)
 			form.POST("/:id/submit", middleware.AuthMiddleware(), handlers.FormHandler.SubmitForm)
 			form.GET("/:id/hasvoted", middleware.AuthMiddleware(), handlers.FormHandler.UserSubmittedForm)
 		}

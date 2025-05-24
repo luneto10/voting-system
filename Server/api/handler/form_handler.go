@@ -33,6 +33,9 @@ func (h *FormHandler) CreateForm(c *gin.Context) {
 		return
 	}
 
+	// Set the user ID from the authenticated user
+	form.UserID = c.GetUint("user_id")
+
 	created, err := h.formService.CreateForm(form)
 	if err != nil {
 		schema.SendError(c, http.StatusInternalServerError, err.Error())
@@ -84,11 +87,14 @@ func (h *FormHandler) UpdateForm(c *gin.Context) {
 		return
 	}
 
-	updated, err := h.formService.UpdateForm(uint(id), req)
+	userID := c.GetUint("user_id")
+	updated, err := h.formService.UpdateForm(uint(id), userID, req)
 	if err != nil {
 		switch err {
 		case service.ErrFormNotFound:
 			schema.SendError(c, http.StatusNotFound, err.Error())
+		case service.ErrNotFormOwner:
+			schema.SendError(c, http.StatusForbidden, err.Error())
 		default:
 			schema.SendError(c, http.StatusInternalServerError, err.Error())
 		}
@@ -102,6 +108,49 @@ func (h *FormHandler) UpdateForm(c *gin.Context) {
 	}
 
 	schema.SendSuccess(c, "update-form", resp)
+}
+
+func (h *FormHandler) DeleteForm(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		schema.SendError(c, http.StatusBadRequest, "invalid form ID")
+		return
+	}
+
+	userID := c.GetUint("user_id")
+	if err := h.formService.DeleteForm(uint(id), userID); err != nil {
+		switch err {
+		case service.ErrFormNotFound:
+			schema.SendError(c, http.StatusNotFound, err.Error())
+		case service.ErrNotFormOwner:
+			schema.SendError(c, http.StatusForbidden, err.Error())
+		default:
+			schema.SendError(c, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	schema.SendSuccess(c, "delete-form", nil)
+}
+
+func (h *FormHandler) GetUserForms(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	forms, err := h.formService.GetFormsByUserID(userID)
+	if err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp := make([]dto.GetFormResponse, len(forms))
+	for i, form := range forms {
+		if err := copier.Copy(&resp[i], form); err != nil {
+			schema.SendError(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	schema.SendSuccess(c, "get-user-forms", resp)
 }
 
 func (h *FormHandler) SubmitForm(c *gin.Context) {
@@ -125,6 +174,8 @@ func (h *FormHandler) SubmitForm(c *gin.Context) {
 			schema.SendError(c, http.StatusNotFound, err.Error())
 		case service.ErrSubmissionAlreadyExists:
 			schema.SendError(c, http.StatusBadRequest, err.Error())
+		case service.ErrCannotSubmitOwnForm:
+			schema.SendError(c, http.StatusForbidden, err.Error())
 		default:
 			schema.SendError(c, http.StatusInternalServerError, err.Error())
 		}
@@ -172,5 +223,4 @@ func (h *FormHandler) UserSubmittedForm(c *gin.Context) {
 	}
 
 	schema.SendSuccess(c, "user-submitted-form", gin.H{"submitted": submitted})
-
 }

@@ -14,7 +14,9 @@ import (
 type FormService interface {
 	CreateForm(f *model.Form) (*model.Form, error)
 	GetForm(id uint) (*model.Form, error)
-	UpdateForm(id uint, updateForm *dto.UpdateFormRequest) (*model.Form, error)
+	UpdateForm(id uint, userID uint, updateForm *dto.UpdateFormRequest) (*model.Form, error)
+	DeleteForm(id uint, userID uint) error
+	GetFormsByUserID(userID uint) ([]*model.Form, error)
 	SubmitForm(formID uint, userID uint, answers []dto.AnswerSubmission) (*model.Submission, error)
 	UserSubmittedForm(formID uint, userID uint) (bool, error)
 }
@@ -42,7 +44,16 @@ func (s *FormServiceImpl) GetForm(id uint) (*model.Form, error) {
 	return form, nil
 }
 
-func (s *FormServiceImpl) UpdateForm(id uint, updateForm *dto.UpdateFormRequest) (*model.Form, error) {
+func (s *FormServiceImpl) UpdateForm(id uint, userID uint, updateForm *dto.UpdateFormRequest) (*model.Form, error) {
+	// Check if user is the owner of the form
+	isOwner, err := s.formRepository.IsFormOwner(userID, id)
+	if err != nil {
+		return nil, err
+	}
+	if !isOwner {
+		return nil, ErrNotFormOwner
+	}
+
 	originalForm, err := s.GetForm(id)
 	if err != nil {
 		return nil, ErrFormNotFound
@@ -58,6 +69,23 @@ func (s *FormServiceImpl) UpdateForm(id uint, updateForm *dto.UpdateFormRequest)
 	return originalForm, nil
 }
 
+func (s *FormServiceImpl) DeleteForm(id uint, userID uint) error {
+	// Check if user is the owner of the form
+	isOwner, err := s.formRepository.IsFormOwner(userID, id)
+	if err != nil {
+		return err
+	}
+	if !isOwner {
+		return ErrNotFormOwner
+	}
+
+	return s.formRepository.DeleteForm(id)
+}
+
+func (s *FormServiceImpl) GetFormsByUserID(userID uint) ([]*model.Form, error) {
+	return s.formRepository.GetFormsByUserID(userID)
+}
+
 func (s *FormServiceImpl) SubmitForm(formID uint, userID uint, answers []dto.AnswerSubmission) (*model.Submission, error) {
 	// First, verify that the form exists
 	form, err := s.GetForm(formID)
@@ -65,7 +93,12 @@ func (s *FormServiceImpl) SubmitForm(formID uint, userID uint, answers []dto.Ans
 		return nil, ErrFormNotFound
 	}
 
-	//Check if user has already submitted the form
+	// Check if user is trying to submit their own form
+	if form.UserID == userID {
+		return nil, ErrCannotSubmitOwnForm
+	}
+
+	// Check if user has already submitted the form
 	submitted, err := s.formRepository.UserSubmittedForm(userID, form.ID)
 	if err != nil {
 		return nil, err
@@ -132,4 +165,3 @@ func (s *FormServiceImpl) UserSubmittedForm(formID uint, userID uint) (bool, err
 	}
 	return submitted, nil
 }
-

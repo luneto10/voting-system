@@ -12,5 +12,7 @@ type Form struct {
 	Description string     `json:"description"`
 	StartAt     time.Time  `json:"start_at" gorm:"default:null"`
 	EndAt       time.Time  `json:"end_at" gorm:"default:null"`
-	Questions   []Question `gorm:"foreignKey:FormID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	UserID      uint       `json:"user_id" gorm:"not null;index"`
+	User        User       `json:"user" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Questions   []Question `gorm:"foreignKey:FormID;constraint:OnDelete:CASCADE"`
 }

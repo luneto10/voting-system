@@ -15,4 +15,5 @@ type User struct {
 	Password    string       `gorm:"not null"`
 	Role        UserRole     `gorm:"not null;default:user"`
 	Submissions []Submission `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Forms       []Form       `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }

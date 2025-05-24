@@ -11,4 +11,6 @@ var (
 	ErrInvalidToken            = errors.New("invalid token")
 	ErrSubmissionAlreadyExists = errors.New("user has already submitted the form")
 	ErrUserNotFound            = errors.New("user not found")
+	ErrNotFormOwner            = errors.New("user is not the owner of this form")
+	ErrCannotSubmitOwnForm     = errors.New("user cannot submit their own form")
 )
