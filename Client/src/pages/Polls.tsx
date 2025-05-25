@@ -52,7 +52,7 @@ export default function Polls() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-6 overflow-x-hidden">
+    <div className="bg-background py-6 overflow-x-hidden">
       <div className="w-full max-w-3xl px-2 mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-foreground">Polls</h1>

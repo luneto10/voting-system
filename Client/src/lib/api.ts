@@ -87,6 +87,16 @@ export interface Form {
   questions: FormQuestion[];
   createdAt: string;
   updatedAt: string;
+  user_id: number;
+}
+
+export interface PublicForm {
+  id: number;
+  title: string;
+  description?: string;
+  startAt: string | null;
+  endAt: string | null;
+  questions: FormQuestion[];
 }
 
 export interface FormVoter {
@@ -98,6 +108,21 @@ export interface FormVoter {
 
 export interface HasVotedResponse {
   submitted: boolean;
+}
+
+export interface SubmitFormRequest {
+  answers: {
+    question_id: number;
+    option_ids?: number[];
+    text?: string;
+  }[];
+}
+
+export interface SubmitFormResponse {
+  id: number;
+  form_id: number;
+  user_id: number;
+  completed_at: string;
 }
 
 export const formsApi = {
@@ -113,12 +138,20 @@ export const formsApi = {
     const response = await api.get<ApiResponse<Form>>(`/forms/${id}`);
     return response.data;
   },
+  getPublicById: async (id: number) => {
+    const response = await api.get<ApiResponse<PublicForm>>(`/forms/${id}/public`);
+    return response.data;
+  },
   getVoters: async (id: number) => {
     const response = await api.get<ApiResponse<FormVoter[]>>(`/forms/${id}/voters`);
     return response.data;
   },
   hasVoted: async (id: number, email: string) => {
     const response = await api.get<ApiResponse<HasVotedResponse>>(`/forms/${id}/hasvoted?email=${encodeURIComponent(email)}`);
+    return response.data;
+  },
+  submit: async (id: number, data: SubmitFormRequest) => {
+    const response = await api.post<ApiResponse<SubmitFormResponse>>(`/forms/${id}/submit`, data);
     return response.data;
   },
   delete: async (id: number) => {

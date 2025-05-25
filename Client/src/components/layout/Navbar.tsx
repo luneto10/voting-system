@@ -17,7 +17,7 @@ const navigation = [
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   const logoutMutation = useMutation({
@@ -40,7 +40,7 @@ export default function Navbar() {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
-            {navigation.map((item) => {
+            {isAuthenticated && navigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link

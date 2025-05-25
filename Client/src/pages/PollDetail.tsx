@@ -1,21 +1,25 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Edit } from 'lucide-react';
+import { ArrowLeft, Edit, Shield } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { formsApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { formatDate, isValidDate } from '@/lib/utils';
 import QuestionDisplay from '@/components/polls/QuestionDisplay';
+import SubmissionLink from '@/components/forms/SubmissionLink';
 import LoadingCard from '@/components/common/LoadingCard';
 
 export default function PollDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
 
-  const { data: form, isLoading } = useQuery({
+  const { data: form, isLoading, error } = useQuery({
     queryKey: ['form', id],
     queryFn: () => formsApi.getById(Number(id)),
     enabled: !!id,
+    retry: false, // Don't retry on errors
   });
 
   if (isLoading) {
@@ -28,17 +32,79 @@ export default function PollDetail() {
     );
   }
 
-  if (!form?.data) {
+  // Handle 403 Forbidden error (access denied)
+  if (error && (error as any)?.response?.status === 403) {
     return (
       <div className="min-h-screen bg-background py-6">
         <div className="w-full max-w-3xl px-2 mx-auto">
-          <LoadingCard message="Poll not found." />
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-8 space-y-4">
+              <Shield className="h-12 w-12 text-destructive" />
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-semibold">Access Denied</h2>
+                <p className="text-muted-foreground">
+                  You don't have permission to view this form. You can only manage forms that you've created.
+                </p>
+              </div>
+              <Button onClick={() => navigate('/polls')}>
+                Back to My Polls
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle other errors or form not found
+  if (error || !form?.data) {
+    return (
+      <div className="min-h-screen bg-background py-6">
+        <div className="w-full max-w-3xl px-2 mx-auto">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-8 space-y-4">
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-semibold">Poll not found</h2>
+                <p className="text-muted-foreground">
+                  The poll you're looking for doesn't exist or has been removed.
+                </p>
+              </div>
+              <Button onClick={() => navigate('/polls')}>
+                Back to My Polls
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   const poll = form.data;
+
+  // This check is now redundant since the backend handles ownership checking
+  // But keeping it as a fallback for any edge cases
+  if (user && poll.user_id !== user.id) {
+    return (
+      <div className="min-h-screen bg-background py-6">
+        <div className="w-full max-w-3xl px-2 mx-auto">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-8 space-y-4">
+              <Shield className="h-12 w-12 text-destructive" />
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-semibold">Access Denied</h2>
+                <p className="text-muted-foreground">
+                  You don't have permission to view this form. You can only manage forms that you've created.
+                </p>
+              </div>
+              <Button onClick={() => navigate('/polls')}>
+                Back to My Polls
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background py-6">
@@ -55,7 +121,6 @@ export default function PollDetail() {
         </div>
 
         <div className="space-y-4">
-          {/* Poll Details */}
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl text-foreground">{poll.title}</CardTitle>
@@ -80,7 +145,8 @@ export default function PollDetail() {
             </CardContent>
           </Card>
 
-          {/* Questions */}
+          <SubmissionLink formId={poll.id} formTitle={poll.title} />
+
           <Card>
             <CardHeader>
               <CardTitle>Questions ({poll.questions.length})</CardTitle>

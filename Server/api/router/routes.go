@@ -13,6 +13,7 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 		form := v1.Group("/forms")
 		{
 			form.GET("/:id", middleware.AuthMiddleware(), handlers.FormHandler.GetForm)
+			form.GET("/:id/public", middleware.AuthMiddleware(), handlers.FormHandler.GetPublicForm)
 			form.POST("", middleware.AuthMiddleware(), handlers.FormHandler.CreateForm)
 			form.PUT("/:id", middleware.AuthMiddleware(), handlers.FormHandler.UpdateForm)
 			form.DELETE("/:id", middleware.AuthMiddleware(), handlers.FormHandler.DeleteForm)

@@ -20,6 +20,7 @@ type FormService interface {
 	SubmitForm(formID uint, userID uint, answers []dto.AnswerSubmission) (*model.Submission, error)
 	UserSubmittedForm(formID uint, userID uint) (bool, error)
 	GetFormVoters(formID uint, userID uint) ([]*model.Submission, error)
+	IsFormOwner(userID uint, formID uint) (bool, error)
 }
 
 type FormServiceImpl struct {
@@ -177,4 +178,8 @@ func (s *FormServiceImpl) GetFormVoters(formID uint, userID uint) ([]*model.Subm
 	}
 
 	return s.formRepository.GetFormVoters(formID)
+}
+
+func (s *FormServiceImpl) IsFormOwner(userID uint, formID uint) (bool, error) {
+	return s.formRepository.IsFormOwner(userID, formID)
 }

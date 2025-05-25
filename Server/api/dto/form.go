@@ -29,6 +29,16 @@ type GetFormResponse struct {
 	StartAt     time.Time             `json:"startAt"`
 	EndAt       time.Time             `json:"endAt"`
 	CreatedAt   time.Time             `json:"createdAt"`
+	UserID      uint                  `json:"user_id"`
+	Questions   []GetQuestionResponse `json:"questions"`
+}
+
+type GetPublicFormResponse struct {
+	ID          uint                  `json:"id"`
+	Title       string                `json:"title"`
+	Description string                `json:"description"`
+	StartAt     time.Time             `json:"startAt"`
+	EndAt       time.Time             `json:"endAt"`
 	Questions   []GetQuestionResponse `json:"questions"`
 }
 

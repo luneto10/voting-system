@@ -59,6 +59,19 @@ func (h *FormHandler) GetForm(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetUint("user_id")
+
+	// Check if user is the owner of the form
+	isOwner, err := h.formService.IsFormOwner(userID, uint(id))
+	if err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if !isOwner {
+		schema.SendError(c, http.StatusForbidden, "you can only access forms that you own")
+		return
+	}
+
 	form, err := h.formService.GetForm(uint(id))
 	if err != nil {
 		schema.SendError(c, http.StatusNotFound, err.Error())
@@ -72,6 +85,29 @@ func (h *FormHandler) GetForm(c *gin.Context) {
 	}
 
 	schema.SendSuccess(c, "get-form", resp)
+}
+
+func (h *FormHandler) GetPublicForm(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		schema.SendError(c, http.StatusBadRequest, "invalid form ID")
+		return
+	}
+
+	form, err := h.formService.GetForm(uint(id))
+	if err != nil {
+		schema.SendError(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	resp := new(dto.GetPublicFormResponse)
+	if err := copier.Copy(&resp, form); err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	schema.SendSuccess(c, "get-public-form", resp)
 }
 
 func (h *FormHandler) UpdateForm(c *gin.Context) {

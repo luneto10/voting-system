@@ -33,7 +33,7 @@ export default function PollCard({ form, onDelete }: PollCardProps) {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-4 py-3 space-y-2">
+      <CardContent className="px-4 py-3 space-y-1">
         {form.description && (
           <p className="text-sm text-muted-foreground">
             {form.description}

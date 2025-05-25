@@ -8,8 +8,10 @@ import PollDetail from '@/pages/PollDetail';
 import Search from '@/pages/Search';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import FormSubmission from '@/pages/FormSubmission';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import SubmissionProtectedRoute from '@/components/auth/SubmissionProtectedRoute';
 import { QueryClientProvider } from '@tanstack/react-query';
 import AuthProvider from '@/components/auth/AuthProvider';
 import { queryClient } from '@/lib/query';
@@ -23,6 +25,19 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              
+              <Route 
+                path="/forms/:id/submit" 
+                element={
+                  <SubmissionProtectedRoute>
+                    <RootLayout>
+                      <FormSubmission />
+                    </RootLayout>
+                  </SubmissionProtectedRoute>
+                } 
+              />
+              
+              {/* Protected admin routes */}
               <Route
                 path="/*"
                 element={
