@@ -23,8 +23,10 @@ type Repositories struct {
 }
 
 type Services struct {
-	FormService service.FormService
-	AuthService service.AuthService
+	FormService              service.FormService
+	FormSubmissionService    service.FormSubmissionService
+	FormAuthorizationService service.FormAuthorizationService
+	AuthService              service.AuthService
 	// Add more services here as needed
 }
 
@@ -51,21 +53,37 @@ func initRepositories(db *gorm.DB) *Repositories {
 
 // initServices initializes all services with their required repositories
 func initServices(repos *Repositories) *Services {
-	formService := service.NewFormService(repos.FormRepository)
+	formAuthService := service.NewFormAuthorizationService(repos.FormRepository)
+
+	formService := service.NewFormService(repos.FormRepository, formAuthService)
+
+	formSubmissionService := service.NewFormSubmissionService(
+		repos.FormRepository,
+		formService,
+		formAuthService,
+	)
+
 	authService := service.NewAuthService(
 		repos.UserRepository,
 		repos.RefreshTokenRepository,
 	)
 
 	return &Services{
-		FormService: formService,
-		AuthService: authService,
+		FormService:              formService,
+		FormSubmissionService:    formSubmissionService,
+		FormAuthorizationService: formAuthService,
+		AuthService:              authService,
 	}
 }
 
 // initHandlers initializes all handlers with their required services
 func initHandlers(services *Services) *Handler {
-	formHandler := handler.NewFormHandler(services.FormService, services.AuthService)
+	formHandler := handler.NewFormHandler(
+		services.FormService,
+		services.FormSubmissionService,
+		services.FormAuthorizationService,
+		services.AuthService,
+	)
 	authHandler := handler.NewAuthHandler(services.AuthService)
 
 	return &Handler{

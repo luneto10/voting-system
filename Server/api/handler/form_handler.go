@@ -13,12 +13,24 @@ import (
 )
 
 type FormHandler struct {
-	authService service.AuthService
-	formService service.FormService
+	authService           service.AuthService
+	formService           service.FormService
+	formSubmissionService service.FormSubmissionService
+	formAuthService       service.FormAuthorizationService
 }
 
-func NewFormHandler(formService service.FormService, authService service.AuthService) *FormHandler {
-	return &FormHandler{formService: formService, authService: authService}
+func NewFormHandler(
+	formService service.FormService,
+	formSubmissionService service.FormSubmissionService,
+	formAuthService service.FormAuthorizationService,
+	authService service.AuthService,
+) *FormHandler {
+	return &FormHandler{
+		formService:           formService,
+		formSubmissionService: formSubmissionService,
+		formAuthService:       formAuthService,
+		authService:           authService,
+	}
 }
 
 func (h *FormHandler) CreateForm(c *gin.Context) {
@@ -62,7 +74,7 @@ func (h *FormHandler) GetForm(c *gin.Context) {
 	userID := c.GetUint("user_id")
 
 	// Check if user is the owner of the form
-	isOwner, err := h.formService.IsFormOwner(userID, uint(id))
+	isOwner, err := h.formAuthService.IsFormOwner(userID, uint(id))
 	if err != nil {
 		schema.SendError(c, http.StatusInternalServerError, err.Error())
 		return
@@ -203,7 +215,7 @@ func (h *FormHandler) SubmitForm(c *gin.Context) {
 		return
 	}
 
-	submission, err := h.formService.SubmitForm(uint(formID), userID, req.Answers)
+	submission, err := h.formSubmissionService.SubmitForm(uint(formID), userID, req.Answers)
 	if err != nil {
 		switch err {
 		case service.ErrFormNotFound:
@@ -252,7 +264,7 @@ func (h *FormHandler) UserSubmittedForm(c *gin.Context) {
 		return
 	}
 
-	submitted, err := h.formService.UserSubmittedForm(uint(formID), user.ID)
+	submitted, err := h.formSubmissionService.UserSubmittedForm(uint(formID), user.ID)
 	if err != nil {
 		schema.SendError(c, http.StatusInternalServerError, err.Error())
 		return
@@ -270,7 +282,7 @@ func (h *FormHandler) GetFormVoters(c *gin.Context) {
 	}
 
 	userID := c.GetUint("user_id")
-	submissions, err := h.formService.GetFormVoters(uint(formID), userID)
+	submissions, err := h.formSubmissionService.GetFormVoters(uint(formID), userID)
 	if err != nil {
 		switch err {
 		case service.ErrFormNotFound:
