@@ -8,7 +8,7 @@ export default function Polls() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Polls</h1>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4"/>
           Create Poll
         </Button>
       </div>

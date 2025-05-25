@@ -8,10 +8,9 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import AuthProvider from '@/components/auth/AuthProvider';
-
-const queryClient = new QueryClient();
+import { queryClient } from '@/lib/query';
 
 function App() {
   return (
