@@ -28,6 +28,13 @@ export interface LoginResponseData {
   refresh_token: string;
 }
 
+export interface ApiError {
+  errors: {
+    field: string;
+    message: string;
+  }[];
+}
+
 export interface ApiResponse<T> {
   message: string;
   data: T;
@@ -46,6 +53,27 @@ export const authApi = {
     await api.post('/auth/logout', {
       refresh_token: localStorage.getItem('refresh_token'),
     });
+  },
+};
+
+export interface FormQuestion {
+  title: string;
+  type: 'single_choice' | 'multiple_choice' | 'text';
+  options?: { title: string }[] | null;
+}
+
+export interface CreateFormRequest {
+  title: string;
+  description?: string;
+  startAt: string | null;
+  endAt: string | null;
+  questions: FormQuestion[];
+}
+
+export const formsApi = {
+  create: async (data: CreateFormRequest) => {
+    const response = await api.post<ApiResponse<{ id: number }>>('/forms', data);
+    return response.data;
   },
 };
 
