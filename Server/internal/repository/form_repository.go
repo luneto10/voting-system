@@ -16,6 +16,7 @@ type FormRepository interface {
 	GetSubmissionByID(id uint) (*model.Submission, error)
 	GetSubmissionsByFormID(formID uint) ([]*model.Submission, error)
 	GetSubmissionsByUserID(userID uint) ([]*model.Submission, error)
+	GetFormVoters(formID uint) ([]*model.Submission, error)
 	UserSubmittedForm(userID uint, formID uint) (bool, error)
 }
 
@@ -93,7 +94,9 @@ func (r *FormRepositoryImpl) GetSubmissionsByFormID(formID uint) ([]*model.Submi
 	var submissions []*model.Submission
 	if err := r.db.
 		Preload("Answers").
-		First(&submissions, &model.Submission{FormID: formID}).Error; err != nil {
+		Preload("User").
+		Where("form_id = ?", formID).
+		Find(&submissions).Error; err != nil {
 		return nil, err
 	}
 	return submissions, nil
@@ -106,6 +109,20 @@ func (r *FormRepositoryImpl) GetSubmissionsByUserID(userID uint) ([]*model.Submi
 		First(&submissions, &model.Submission{UserID: userID}).Error; err != nil {
 		return nil, err
 	}
+	return submissions, nil
+}
+
+func (r *FormRepositoryImpl) GetFormVoters(formID uint) ([]*model.Submission, error) {
+	var submissions []*model.Submission
+	if err := r.db.
+		Preload("User").
+		Select("id, user_id, form_id, created_at, completed_at").
+		Where(&model.Submission{FormID: formID}).
+		Order("created_at DESC").
+		Find(&submissions).Error; err != nil {
+		return nil, err
+	}
+	
 	return submissions, nil
 }
 

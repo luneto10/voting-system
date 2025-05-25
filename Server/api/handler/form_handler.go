@@ -224,3 +224,38 @@ func (h *FormHandler) UserSubmittedForm(c *gin.Context) {
 
 	schema.SendSuccess(c, "user-submitted-form", gin.H{"submitted": submitted})
 }
+
+func (h *FormHandler) GetFormVoters(c *gin.Context) {
+	formIDStr := c.Param("id")
+	formID, err := strconv.ParseUint(formIDStr, 10, 64)
+	if err != nil {
+		schema.SendError(c, http.StatusBadRequest, "invalid form ID")
+		return
+	}
+
+	userID := c.GetUint("user_id")
+	submissions, err := h.formService.GetFormVoters(uint(formID), userID)
+	if err != nil {
+		switch err {
+		case service.ErrFormNotFound:
+			schema.SendError(c, http.StatusNotFound, err.Error())
+		case service.ErrNotFormOwner:
+			schema.SendError(c, http.StatusForbidden, err.Error())
+		default:
+			schema.SendError(c, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	resp := make([]dto.FormVoterResponse, len(submissions))
+	for i, submission := range submissions {
+		resp[i] = dto.FormVoterResponse{
+			ID:          submission.ID,
+			UserID:      submission.UserID,
+			Email:       submission.User.Email,
+			CompletedAt: submission.CompletedAt,
+		}
+	}
+
+	schema.SendSuccess(c, "get-form-voters", resp)
+}

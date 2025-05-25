@@ -4,6 +4,7 @@ import RootLayout from '@/layouts/RootLayout';
 import Dashboard from '@/pages/Dashboard';
 import Polls from '@/pages/Polls';
 import CreatePoll from '@/pages/CreatePoll';
+import PollDetail from '@/pages/PollDetail';
 import Search from '@/pages/Search';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -31,6 +32,7 @@ function App() {
                         <Route index element={<Dashboard />} />
                         <Route path="polls" element={<Polls />} />
                         <Route path="polls/create" element={<CreatePoll />} />
+                        <Route path="polls/:id" element={<PollDetail />} />
                         <Route path="search" element={<Search />} />
                       </Routes>
                     </RootLayout>

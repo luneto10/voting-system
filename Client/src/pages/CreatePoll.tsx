@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -61,6 +61,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function CreatePoll() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [date, setDate] = useState<DateRange | undefined>();
 
   const form = useForm<FormValues>({
@@ -88,6 +89,7 @@ export default function CreatePoll() {
   const createPollMutation = useMutation({
     mutationFn: formsApi.create,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['forms'] });
       toast.success('Poll created successfully');
       navigate('/polls');
     },

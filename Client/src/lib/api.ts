@@ -57,9 +57,13 @@ export const authApi = {
 };
 
 export interface FormQuestion {
+  id: number;
   title: string;
   type: 'single_choice' | 'multiple_choice' | 'text';
-  options?: { title: string }[] | null;
+  options?: {
+    id: number;
+    title: string;
+  }[] | null;
 }
 
 export interface CreateFormRequest {
@@ -67,12 +71,58 @@ export interface CreateFormRequest {
   description?: string;
   startAt: string | null;
   endAt: string | null;
+  questions: {
+    title: string;
+    type: 'single_choice' | 'multiple_choice' | 'text';
+    options?: { title: string }[] | null;
+  }[];
+}
+
+export interface Form {
+  id: number;
+  title: string;
+  description?: string;
+  startAt: string | null;
+  endAt: string | null;
   questions: FormQuestion[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FormVoter {
+  id: number;
+  user_id: number;
+  email: string;
+  completed_at: string | null;
+}
+
+export interface HasVotedResponse {
+  submitted: boolean;
 }
 
 export const formsApi = {
   create: async (data: CreateFormRequest) => {
     const response = await api.post<ApiResponse<{ id: number }>>('/forms', data);
+    return response.data;
+  },
+  getAll: async () => {
+    const response = await api.get<ApiResponse<Form[]>>('/forms/user');
+    return response.data;
+  },
+  getById: async (id: number) => {
+    const response = await api.get<ApiResponse<Form>>(`/forms/${id}`);
+    return response.data;
+  },
+  getVoters: async (id: number) => {
+    const response = await api.get<ApiResponse<FormVoter[]>>(`/forms/${id}/voters`);
+    return response.data;
+  },
+  hasVoted: async (id: number, email: string) => {
+    const response = await api.get<ApiResponse<HasVotedResponse>>(`/forms/${id}/hasvoted?email=${encodeURIComponent(email)}`);
+    return response.data;
+  },
+  delete: async (id: number) => {
+    const response = await api.delete<ApiResponse<{ message: string }>>(`/forms/${id}`);
     return response.data;
   },
 };

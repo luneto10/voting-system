@@ -28,6 +28,7 @@ type GetFormResponse struct {
 	Description string                `json:"description"`
 	StartAt     time.Time             `json:"startAt"`
 	EndAt       time.Time             `json:"endAt"`
+	CreatedAt   time.Time             `json:"createdAt"`
 	Questions   []GetQuestionResponse `json:"questions"`
 }
 
@@ -76,4 +77,11 @@ type SubmitFormResponse struct {
 	FormID      uint      `json:"form_id"`
 	UserID      uint      `json:"user_id"`
 	CompletedAt time.Time `json:"completed_at"`
+}
+
+type FormVoterResponse struct {
+	ID          uint       `json:"id"`
+	UserID      uint       `json:"user_id"`
+	Email       string     `json:"email"`
+	CompletedAt *time.Time `json:"completed_at"`
 }

@@ -19,6 +19,7 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 			form.GET("/user", middleware.AuthMiddleware(), handlers.FormHandler.GetUserForms)
 			form.POST("/:id/submit", middleware.AuthMiddleware(), handlers.FormHandler.SubmitForm)
 			form.GET("/:id/hasvoted", middleware.AuthMiddleware(), handlers.FormHandler.UserSubmittedForm)
+			form.GET("/:id/voters", middleware.AuthMiddleware(), handlers.FormHandler.GetFormVoters)
 		}
 
 		auth := v1.Group("/auth")
