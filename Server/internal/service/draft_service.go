@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/jinzhu/copier"
 	"github.com/luneto10/voting-system/api/dto"
 	"github.com/luneto10/voting-system/api/model"
 	"github.com/luneto10/voting-system/internal/repository"
@@ -80,9 +79,21 @@ func (s *DraftServiceImpl) GetDraft(userID uint, formID uint) (*dto.DraftSubmiss
 		return nil, err
 	}
 
-	response := &dto.DraftSubmissionResponse{}
-	if err := copier.Copy(&response, draft); err != nil {
+	// Get form data
+	form, err := s.formRepository.GetForm(formID)
+	if err != nil {
 		return nil, err
+	}
+
+	response := &dto.DraftSubmissionResponse{
+		ID:                 draft.ID,
+		FormID:             draft.FormID,
+		UserID:             draft.UserID,
+		FormTitle:          form.Title,
+		FormDescription:    form.Description,
+		LastModified:       draft.UpdatedAt,
+		ProgressPercentage: draft.ProgressPercentage,
+		Answers:            answers,
 	}
 
 	return response, nil

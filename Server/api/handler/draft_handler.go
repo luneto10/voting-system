@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/copier"
 	"github.com/luneto10/voting-system/api/dto"
 	"github.com/luneto10/voting-system/internal/schema"
 	"github.com/luneto10/voting-system/internal/service"
@@ -46,11 +46,21 @@ func (h *DraftHandler) SaveDraft(c *gin.Context) {
 		return
 	}
 
-	response := dto.DraftSubmissionResponse{}
-
-	if err := copier.Copy(&response, draft); err != nil {
-		schema.SendError(c, http.StatusInternalServerError, err.Error())
+	var answers []dto.AnswerSubmission
+	if err := json.Unmarshal(draft.Answers, &answers); err != nil {
+		schema.SendError(c, http.StatusInternalServerError, "failed to unmarshal answers")
 		return
+	}
+
+	response := dto.DraftSubmissionResponse{
+		ID:                 draft.ID,
+		FormID:             draft.FormID,
+		UserID:             draft.UserID,
+		FormTitle:          draft.Form.Title,
+		FormDescription:    draft.Form.Description,
+		LastModified:       draft.UpdatedAt,
+		ProgressPercentage: draft.ProgressPercentage,
+		Answers:            answers,
 	}
 
 	schema.SendSuccess(c, "save-draft", response)

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { PublicForm, DraftSubmission } from '@/lib/api';
 import { useFormAnswers } from '@/hooks/useFormAnswers';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useQueryClient } from '@tanstack/react-query';
 import FormHeader from './FormHeader';
 import QuestionRenderer from './QuestionRenderer';
 
@@ -22,7 +23,8 @@ export default function ActiveFormSubmission({
   initialAnswers
 }: ActiveFormSubmissionProps) {
   const navigate = useNavigate();
-  const { answers, validationErrors, updateAnswer, validateAnswers, formatAnswersForSubmission } = useFormAnswers(initialAnswers);
+  const queryClient = useQueryClient();
+  const { answers, validationErrors, updateAnswer, validateAnswers, formatAnswersForSubmission } = useFormAnswers(initialAnswers, form.questions);
   const { autoSave, isSaving } = useAutoSave(form.id);
 
   const handleAnswerChange = (questionId: number, value: any) => {
@@ -35,6 +37,11 @@ export default function ActiveFormSubmission({
     
     const formattedAnswers = formatAnswersForSubmission(form);
     onSubmit({ answers: formattedAnswers });
+  };
+
+  const handleCancel = () => {
+    queryClient.invalidateQueries({ queryKey: ['user-dashboard'] });
+    navigate('/');
   };
 
   return (
@@ -84,7 +91,7 @@ export default function ActiveFormSubmission({
             <div className="flex justify-end gap-4 pt-6 border-t">
               <Button
                 variant="outline"
-                onClick={() => navigate('/')}
+                onClick={handleCancel}
                 disabled={isSubmitting}
               >
                 Cancel

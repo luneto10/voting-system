@@ -3,12 +3,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { UserFormParticipation } from '@/lib/api';
+import { DashboardForm } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '@/lib/utils';
 
 interface UserFormCardProps {
-  form: UserFormParticipation;
+  form: DashboardForm;
   onContinueDraft?: (formId: number) => void;
 }
 

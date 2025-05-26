@@ -1,26 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Form, PublicForm, DraftSubmission } from '@/lib/api';
 
 type FormAnswers = Record<number, any>;
 type ValidationErrors = Record<number, string>;
 
-export function useFormAnswers(initialAnswers?: DraftSubmission['answers']) {
-  const [answers, setAnswers] = useState<FormAnswers>({});
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-
-  useEffect(() => {
-    if (initialAnswers) {
-      const initialAnswersMap: FormAnswers = {};
-      initialAnswers.forEach(answer => {
-        if (answer.text) {
-          initialAnswersMap[answer.question_id] = answer.text;
-        } else if (answer.option_ids) {
-          initialAnswersMap[answer.question_id] = answer.option_ids;
+export function useFormAnswers(initialAnswers?: DraftSubmission['answers'], questions?: { id: number, type: string }[]) {
+  const [answers, setAnswers] = useState<FormAnswers>(() => {
+    const initialAnswersMap: FormAnswers = {};
+    if (questions) {
+      questions.forEach(q => {
+        const draft = initialAnswers?.find(a => a.question_id === q.id);
+        if (q.type === 'text') {
+          initialAnswersMap[q.id] = draft?.text || '';
+        } else {
+          initialAnswersMap[q.id] = draft?.option_ids || [];
         }
       });
-      setAnswers(initialAnswersMap);
     }
-  }, [initialAnswers]);
+    return initialAnswersMap;
+  });
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   const updateAnswer = (questionId: number, value: any) => {
     setAnswers(prev => ({
@@ -28,7 +27,6 @@ export function useFormAnswers(initialAnswers?: DraftSubmission['answers']) {
       [questionId]: value
     }));
     
-    // Clear validation error when user starts typing/selecting
     if (validationErrors[questionId]) {
       setValidationErrors(prev => {
         const newErrors = { ...prev };

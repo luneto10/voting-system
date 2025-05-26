@@ -35,9 +35,9 @@ export default function QuestionRenderer({ question, value, onChange, error }: Q
         <div key={option.id} className="flex items-center space-x-2">
           <Checkbox
             id={`option-${option.id}`}
-            checked={value?.includes(option.id) || false}
+            checked={Array.isArray(value) ? value.includes(option.id) : false}
             onCheckedChange={(checked) => {
-              const currentValue = value || [];
+              const currentValue = Array.isArray(value) ? value : [];
               if (checked) {
                 onChange([...currentValue, option.id]);
               } else {

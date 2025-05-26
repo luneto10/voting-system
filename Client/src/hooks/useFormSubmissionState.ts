@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formsApi, SubmitFormRequest, DraftSubmission } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import { useLocation } from 'react-router-dom';
 export function useFormSubmissionState(formId: string | undefined) {
   const { user } = useAuth();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [submitted, setSubmitted] = useState(false);
   const [submissionData, setSubmissionData] = useState<any>(null);
 
@@ -35,6 +36,7 @@ export function useFormSubmissionState(formId: string | undefined) {
       setSubmissionData(response.data);
       setSubmitted(true);
       toast.success('Form submitted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['user-dashboard'] });
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Failed to submit form');
@@ -57,6 +59,13 @@ export function useFormSubmissionState(formId: string | undefined) {
     submitMutation.mutate(answers);
   };
 
+  // Ensure draftAnswers is properly formatted
+  const draftAnswers = draftData?.answers?.map(answer => ({
+    question_id: answer.question_id,
+    option_ids: answer.option_ids || [],
+    text: answer.text || '',
+  }));
+
   return {
     form,
     isLoadingForm,
@@ -68,6 +77,6 @@ export function useFormSubmissionState(formId: string | undefined) {
     isFormAvailable: isFormAvailable(),
     submitForm,
     isSubmitting: submitMutation.isPending,
-    draftAnswers: draftData?.answers,
+    draftAnswers,
   };
-} 
+}
