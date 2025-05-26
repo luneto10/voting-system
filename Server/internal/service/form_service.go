@@ -58,7 +58,7 @@ func (s *FormServiceImpl) UpdateForm(id uint, userID uint, updateForm *dto.Updat
 	if len(updateForm.DeletedQuestionIds) > 0 {
 		for _, questionID := range updateForm.DeletedQuestionIds {
 			if err := s.formRepository.DeleteQuestion(questionID); err != nil {
-				return nil, err
+		return nil, err
 			}
 		}
 	}

@@ -29,7 +29,9 @@ func NewDashboardRepository(db *gorm.DB) DashboardRepository {
 
 func (r *DashboardRepositoryImpl) GetUserFormParticipation(userID uint, formID uint) (*model.UserFormParticipation, error) {
 	var participation model.UserFormParticipation
-	result := r.db.Where("user_id = ? AND form_id = ?", userID, formID).First(&participation)
+	result := r.db.
+		Where("user_id = ? AND form_id = ?", userID, formID).
+		First(&participation)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -103,7 +105,9 @@ func (r *DashboardRepositoryImpl) GetUserFormStatistics(userID uint) (available,
 func (r *DashboardRepositoryImpl) GetUserRecentActivity(userID uint, limit int) ([]*model.UserFormParticipation, error) {
 	var activities []*model.UserFormParticipation
 	err := r.db.
-		Preload("Form").
+		Preload("Form", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
 		Where("user_id = ?", userID).
 		Order("last_modified DESC").
 		Limit(limit).
@@ -121,7 +125,9 @@ func (r *DashboardRepositoryImpl) GetUserActivities(userID uint, status string, 
 	var total int64
 
 	query := r.db.Model(&model.UserFormParticipation{}).
-		Preload("Form").
+		Preload("Form", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
 		Where("user_id = ?", userID)
 
 	if status != "all" {

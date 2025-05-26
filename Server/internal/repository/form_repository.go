@@ -49,7 +49,40 @@ func (r *FormRepositoryImpl) UpdateForm(id uint, form *model.Form) error {
 }
 
 func (r *FormRepositoryImpl) DeleteForm(id uint) error {
-	return r.db.Delete(&model.Form{}, id).Error
+	// Start a transaction
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	// Update all user form participations to 'deleted' status
+	if err := tx.Model(&model.UserFormParticipation{}).
+		Where("form_id = ?", id).
+		Update("status", "deleted").Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Delete all submissions for this form
+	if err := tx.Where("form_id = ?", id).Delete(&model.Submission{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Delete all questions and their options
+	if err := tx.Where("form_id = ?", id).Delete(&model.Question{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Finally delete the form
+	if err := tx.Delete(&model.Form{}, id).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Commit the transaction
+	return tx.Commit().Error
 }
 
 func (r *FormRepositoryImpl) GetFormsByUserID(userID uint) ([]*model.Form, error) {

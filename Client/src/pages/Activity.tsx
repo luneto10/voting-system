@@ -110,6 +110,7 @@ export default function Activity() {
             <SelectItem value="all">All Activities</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="deleted">Deleted</SelectItem>
           </SelectContent>
         </Select>
       </div>

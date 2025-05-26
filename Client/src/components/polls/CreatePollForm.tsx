@@ -44,7 +44,6 @@ export default function CreatePollForm() {
 
   const onSubmit = (data: FormValues) => {
     console.log('Form submitted:', data);
-    // Here we'll add the API call later
     setOpen(false);
     form.reset();
   };

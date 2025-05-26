@@ -109,16 +109,14 @@ func (s *DashboardServiceImpl) GetUserFormsWithStatus(userID uint) ([]dto.Dashbo
 			completedAt = participation.CompletedAt
 			lastModified = &participation.LastModified
 		} else {
-			// Check if form is available
 			now := time.Now()
 			if form.StartAt.Before(now) && form.EndAt.After(now) {
 				status = "available"
 			} else {
-				continue // Skip inactive forms
+				continue
 			}
 		}
 
-		// Get draft progress if in progress
 		if status == "in_progress" {
 			draft, err := s.draftRepository.GetDraft(form.ID, userID)
 			if err == nil {
@@ -127,13 +125,11 @@ func (s *DashboardServiceImpl) GetUserFormsWithStatus(userID uint) ([]dto.Dashbo
 			}
 		}
 
-		// Use copier for basic form fields
 		dashboardForm := dto.DashboardForm{}
 		if err := copier.Copy(&dashboardForm, form); err != nil {
 			return nil, err
 		}
 
-		// Set dashboard-specific fields
 		dashboardForm.FormID = form.ID
 		dashboardForm.FormTitle = form.Title
 		dashboardForm.FormDescription = form.Description
@@ -225,6 +221,11 @@ func (s *DashboardServiceImpl) GetUserActivities(userID uint, status string, pag
 		activityList[i].FormDescription = activity.Form.Description
 		activityList[i].StartAt = activity.Form.StartAt
 		activityList[i].EndAt = activity.Form.EndAt
+
+		// Check if form was deleted
+		if !activity.Form.DeletedAt.Time.IsZero() {
+			activityList[i].Status = "deleted"
+		}
 	}
 
 	return activityList, total, nil

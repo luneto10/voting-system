@@ -26,13 +26,13 @@ export default function Dashboard() {
       return { formId, draft };
     },
     onSuccess: ({ formId, draft }) => {
-      navigate(`/forms/${formId}/submit`, { 
+      navigate(`/polls/${formId}/submit`, { 
         state: { draftData: draft.data } 
       });
     },
     onError: (_, formId) => {
       toast.error('Failed to load draft. Starting form from beginning.');
-      navigate(`/forms/${formId}/submit`);
+      navigate(`/polls/${formId}/submit`);
     },
   });
 
@@ -77,8 +77,8 @@ export default function Dashboard() {
 
   const { statistics = defaultData.statistics, recent_activity = [], forms = [] } = dashboardData?.data || defaultData;
 
-  const inProgressForms = forms.filter((f: DashboardForm) => f.status === 'in_progress');
-  const completedForms = forms.filter((f: DashboardForm) => f.status === 'completed');
+  const inProgressForms = forms?.filter((f: DashboardForm) => f.status === 'in_progress') || [];
+  const completedForms = forms?.filter((f: DashboardForm) => f.status === 'completed') || [];
 
   return (
     <div className="space-y-6">

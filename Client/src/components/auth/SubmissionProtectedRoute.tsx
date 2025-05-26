@@ -10,7 +10,6 @@ export default function SubmissionProtectedRoute({ children }: SubmissionProtect
   const location = useLocation();
 
   if (!isAuthenticated) {
-    // Store the submission URL in state so we can redirect back after login
     return <Navigate to="/login" state={{ from: location, returnToSubmission: true }} replace />;
   }
 
