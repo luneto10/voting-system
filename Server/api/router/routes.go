@@ -30,5 +30,19 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 			auth.POST("/refresh", handlers.AuthHandler.RefreshToken)
 			auth.POST("/logout", handlers.AuthHandler.Logout)
 		}
+
+		dashboard := v1.Group("/dashboard")
+		{
+			dashboard.GET("", middleware.AuthMiddleware(), handlers.DashboardHandler.GetDashboard)
+			dashboard.GET("/search", middleware.AuthMiddleware(), handlers.DashboardHandler.SearchForms)
+			dashboard.PUT("/forms/:formId/status/:status", middleware.AuthMiddleware(), handlers.DashboardHandler.UpdateFormStatus)
+		}
+
+		drafts := v1.Group("/drafts")
+		{
+			drafts.POST("", middleware.AuthMiddleware(), handlers.DraftHandler.SaveDraft)
+			drafts.GET("/:formId", middleware.AuthMiddleware(), handlers.DraftHandler.GetDraft)
+			drafts.DELETE("/:formId", middleware.AuthMiddleware(), handlers.DraftHandler.DeleteDraft)
+		}
 	}
 }

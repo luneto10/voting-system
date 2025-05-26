@@ -37,6 +37,8 @@ func InitializePostgres(cfg config.DBConfig) (*gorm.DB, error) {
 		&model.User{},
 		&model.Submission{},
 		&model.RefreshToken{},
+		&model.DraftSubmission{},
+		&model.UserFormParticipation{},
 	)
 
 	return db, nil

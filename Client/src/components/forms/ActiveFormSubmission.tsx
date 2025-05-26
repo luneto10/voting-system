@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { PublicForm } from '@/lib/api';
+import { PublicForm, DraftSubmission } from '@/lib/api';
 import { useFormAnswers } from '@/hooks/useFormAnswers';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import FormHeader from './FormHeader';
 import QuestionRenderer from './QuestionRenderer';
 
@@ -11,15 +12,23 @@ interface ActiveFormSubmissionProps {
   form: PublicForm;
   onSubmit: (answers: any) => void;
   isSubmitting: boolean;
+  initialAnswers?: DraftSubmission['answers'];
 }
 
 export default function ActiveFormSubmission({ 
   form, 
   onSubmit, 
-  isSubmitting 
+  isSubmitting,
+  initialAnswers
 }: ActiveFormSubmissionProps) {
   const navigate = useNavigate();
-  const { answers, validationErrors, updateAnswer, validateAnswers, formatAnswersForSubmission } = useFormAnswers();
+  const { answers, validationErrors, updateAnswer, validateAnswers, formatAnswersForSubmission } = useFormAnswers(initialAnswers);
+  const { autoSave, isSaving } = useAutoSave(form.id);
+
+  const handleAnswerChange = (questionId: number, value: any) => {
+    updateAnswer(questionId, value);
+    autoSave(answers);
+  };
 
   const handleSubmit = () => {
     if (!validateAnswers(form)) return;
@@ -35,10 +44,20 @@ export default function ActiveFormSubmission({
 
         <Card>
           <CardHeader>
-            <CardTitle>Submit Your Response</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Please answer all questions below. All fields are required.
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Submit Your Response</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Please answer all questions below. All fields are required.
+                </p>
+              </div>
+              {isSaving && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Save className="h-4 w-4 animate-pulse" />
+                  Saving...
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-8">
             {form.questions.map((question, index) => (
@@ -51,7 +70,7 @@ export default function ActiveFormSubmission({
                     <QuestionRenderer
                       question={question}
                       value={answers[question.id]}
-                      onChange={(value) => updateAnswer(question.id, value)}
+                      onChange={(value) => handleAnswerChange(question.id, value)}
                       error={validationErrors[question.id]}
                     />
                   </div>

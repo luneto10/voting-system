@@ -20,17 +20,20 @@ type FormSubmissionServiceImpl struct {
 	formRepository       repository.FormRepository
 	formService          FormService
 	authorizationService FormAuthorizationService
+	dashboardService     DashboardService
 }
 
 func NewFormSubmissionService(
 	formRepository repository.FormRepository,
 	formService FormService,
 	authorizationService FormAuthorizationService,
+	dashboardService DashboardService,
 ) FormSubmissionService {
 	return &FormSubmissionServiceImpl{
 		formRepository:       formRepository,
 		formService:          formService,
 		authorizationService: authorizationService,
+		dashboardService:     dashboardService,
 	}
 }
 
@@ -91,6 +94,11 @@ func (s *FormSubmissionServiceImpl) SubmitForm(formID uint, userID uint, answers
 	submission.Answers = modelAnswers
 
 	if err := s.formRepository.CreateSubmission(submission); err != nil {
+		return nil, err
+	}
+
+	// Update form status to completed
+	if err := s.dashboardService.UpdateUserFormStatus(userID, formID, "completed"); err != nil {
 		return nil, err
 	}
 

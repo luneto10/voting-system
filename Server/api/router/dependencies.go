@@ -9,9 +9,10 @@ import (
 
 // Handler contains all API handlers
 type Handler struct {
-	FormHandler *handler.FormHandler
-	AuthHandler *handler.AuthHandler
-	// Add more handlers here as needed
+	FormHandler      *handler.FormHandler
+	AuthHandler      *handler.AuthHandler
+	DashboardHandler *handler.DashboardHandler
+	DraftHandler     *handler.DraftHandler
 }
 
 // Repositories contains all repository instances
@@ -19,7 +20,8 @@ type Repositories struct {
 	FormRepository         repository.FormRepository
 	UserRepository         repository.UserRepository
 	RefreshTokenRepository repository.RefreshTokenRepository
-	// Add more repositories here as needed
+	DashboardRepository    repository.DashboardRepository
+	DraftRepository        repository.DraftRepository
 }
 
 type Services struct {
@@ -27,7 +29,8 @@ type Services struct {
 	FormSubmissionService    service.FormSubmissionService
 	FormAuthorizationService service.FormAuthorizationService
 	AuthService              service.AuthService
-	// Add more services here as needed
+	DashboardService         service.DashboardService
+	DraftService             service.DraftService
 }
 
 func initDependencies(db *gorm.DB) *Handler {
@@ -44,10 +47,15 @@ func initRepositories(db *gorm.DB) *Repositories {
 	formRepo := repository.NewFormRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(db)
+	dashboardRepo := repository.NewDashboardRepository(db)
+	draftRepo := repository.NewDraftRepository(db)
+
 	return &Repositories{
 		FormRepository:         formRepo,
 		UserRepository:         userRepo,
 		RefreshTokenRepository: refreshTokenRepo,
+		DashboardRepository:    dashboardRepo,
+		DraftRepository:        draftRepo,
 	}
 }
 
@@ -57,10 +65,17 @@ func initServices(repos *Repositories) *Services {
 
 	formService := service.NewFormService(repos.FormRepository, formAuthService)
 
+	dashboardService := service.NewDashboardService(
+		repos.DashboardRepository,
+		repos.DraftRepository,
+		repos.FormRepository,
+	)
+
 	formSubmissionService := service.NewFormSubmissionService(
 		repos.FormRepository,
 		formService,
 		formAuthService,
+		dashboardService,
 	)
 
 	authService := service.NewAuthService(
@@ -68,11 +83,18 @@ func initServices(repos *Repositories) *Services {
 		repos.RefreshTokenRepository,
 	)
 
+	draftService := service.NewDraftService(
+		repos.DraftRepository,
+		repos.FormRepository,
+	)
+
 	return &Services{
 		FormService:              formService,
 		FormSubmissionService:    formSubmissionService,
 		FormAuthorizationService: formAuthService,
 		AuthService:              authService,
+		DashboardService:         dashboardService,
+		DraftService:             draftService,
 	}
 }
 
@@ -83,11 +105,16 @@ func initHandlers(services *Services) *Handler {
 		services.FormSubmissionService,
 		services.FormAuthorizationService,
 		services.AuthService,
+		services.DashboardService,
 	)
 	authHandler := handler.NewAuthHandler(services.AuthService)
+	dashboardHandler := handler.NewDashboardHandler(services.DashboardService)
+	draftHandler := handler.NewDraftHandler(services.DraftService, services.DashboardService)
 
 	return &Handler{
-		FormHandler: formHandler,
-		AuthHandler: authHandler,
+		FormHandler:      formHandler,
+		AuthHandler:      authHandler,
+		DashboardHandler: dashboardHandler,
+		DraftHandler:     draftHandler,
 	}
 }

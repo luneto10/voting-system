@@ -1,12 +1,26 @@
-import { useState } from 'react';
-import { Form, PublicForm } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import { Form, PublicForm, DraftSubmission } from '@/lib/api';
 
 type FormAnswers = Record<number, any>;
 type ValidationErrors = Record<number, string>;
 
-export function useFormAnswers() {
+export function useFormAnswers(initialAnswers?: DraftSubmission['answers']) {
   const [answers, setAnswers] = useState<FormAnswers>({});
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+
+  useEffect(() => {
+    if (initialAnswers) {
+      const initialAnswersMap: FormAnswers = {};
+      initialAnswers.forEach(answer => {
+        if (answer.text) {
+          initialAnswersMap[answer.question_id] = answer.text;
+        } else if (answer.option_ids) {
+          initialAnswersMap[answer.question_id] = answer.option_ids;
+        }
+      });
+      setAnswers(initialAnswersMap);
+    }
+  }, [initialAnswers]);
 
   const updateAnswer = (questionId: number, value: any) => {
     setAnswers(prev => ({

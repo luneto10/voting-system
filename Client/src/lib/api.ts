@@ -36,8 +36,9 @@ export interface ApiError {
 }
 
 export interface ApiResponse<T> {
-  message: string;
   data: T;
+  message?: string;
+  error?: string;
 }
 
 export const authApi = {
@@ -125,6 +126,81 @@ export interface SubmitFormResponse {
   completed_at: string;
 }
 
+export interface DraftSubmission {
+  id: number;
+  form_id: number;
+  user_id: number;
+  form_title: string;
+  form_description?: string;
+  last_modified: string;
+  progress_percentage: number;
+  answers: {
+    question_id: number;
+    option_ids?: number[];
+    text?: string;
+  }[];
+}
+
+export interface UserFormParticipation {
+  form_id: number;
+  form_title: string;
+  form_description?: string;
+  status: 'available' | 'in_progress' | 'completed';
+  started_at?: string;
+  completed_at?: string;
+  last_modified?: string;
+  progress_percentage?: number;
+  startAt: string | null;
+  endAt: string | null;
+}
+
+export interface SaveDraftRequest {
+  form_id: number;
+  answers: {
+    question_id: number;
+    option_ids?: number[];
+    text?: string;
+  }[];
+}
+
+export interface DashboardStatistics {
+  total_available: number;
+  total_completed: number;
+  total_in_progress: number;
+  recent_activity_count: number;
+}
+
+export interface DashboardActivity {
+  form_id: number;
+  form_title: string;
+  form_description: string;
+  status: string;
+  completed_at?: string;
+  startAt: string;
+  endAt: string;
+}
+
+export interface DashboardForm {
+  form_id: number;
+  form_title: string;
+  form_description: string;
+  status: 'available' | 'in_progress' | 'completed';
+  started_at?: string;
+  completed_at?: string;
+  last_modified?: string;
+  progress_percentage: number;
+  startAt: string;
+  endAt: string;
+}
+
+export interface DashboardData {
+  statistics: DashboardStatistics;
+  recent_activity: DashboardActivity[];
+  forms: DashboardForm[];
+}
+
+export interface UserDashboardData extends DashboardData {}
+
 export const formsApi = {
   create: async (data: CreateFormRequest) => {
     const response = await api.post<ApiResponse<{ id: number }>>('/forms', data);
@@ -156,6 +232,26 @@ export const formsApi = {
   },
   delete: async (id: number) => {
     const response = await api.delete<ApiResponse<{ message: string }>>(`/forms/${id}`);
+    return response.data;
+  },
+  getUserDashboard: async () => {
+    const response = await api.get<ApiResponse<UserDashboardData>>('/dashboard');
+    return response.data;
+  },
+  saveDraft: async (data: SaveDraftRequest) => {
+    const response = await api.post<ApiResponse<{ id: number }>>(`/drafts`, data);
+    return response.data;
+  },
+  getDraft: async (formId: number) => {
+    const response = await api.get<ApiResponse<DraftSubmission>>(`/drafts/${formId}`);
+    return response.data;
+  },
+  deleteDraft: async (formId: number) => {
+    const response = await api.delete<ApiResponse<{ message: string }>>(`/drafts/${formId}`);
+    return response.data;
+  },
+  searchForms: async (query: string) => {
+    const response = await api.get<ApiResponse<PublicForm[]>>(`/dashboard/search?q=${encodeURIComponent(query)}`);
     return response.data;
   },
 };

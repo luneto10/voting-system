@@ -21,6 +21,7 @@ export default function FormSubmission() {
     isFormAvailable,
     submitForm,
     isSubmitting,
+    draftAnswers,
   } = useFormSubmissionState(id);
 
   // Show loading state
@@ -65,6 +66,7 @@ export default function FormSubmission() {
       form={form}
       onSubmit={submitForm}
       isSubmitting={isSubmitting}
+      initialAnswers={draftAnswers}
     />
   );
 } 

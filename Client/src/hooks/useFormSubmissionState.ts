@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { formsApi, SubmitFormRequest } from '@/lib/api';
+import { formsApi, SubmitFormRequest, DraftSubmission } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 
 export function useFormSubmissionState(formId: string | undefined) {
   const { user } = useAuth();
+  const location = useLocation();
   const [submitted, setSubmitted] = useState(false);
   const [submissionData, setSubmissionData] = useState<any>(null);
+
+  // Get draft data from location state if available
+  const draftData = location.state?.draftData as DraftSubmission | undefined;
 
   // Fetch form data (public endpoint for submission)
   const { data: formResponse, isLoading: isLoadingForm, error: formError } = useQuery({
@@ -63,5 +68,6 @@ export function useFormSubmissionState(formId: string | undefined) {
     isFormAvailable: isFormAvailable(),
     submitForm,
     isSubmitting: submitMutation.isPending,
+    draftAnswers: draftData?.answers,
   };
 } 

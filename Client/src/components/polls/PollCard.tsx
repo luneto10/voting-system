@@ -18,7 +18,7 @@ export default function PollCard({ form, onDelete }: PollCardProps) {
       className="w-full cursor-pointer hover:shadow-md transition-shadow" 
       onClick={() => navigate(`/polls/${form.id}`)}
     >
-      <CardHeader className="px-4 py-3">
+      <CardHeader className="px-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg text-foreground">{form.title}</CardTitle>
           <Button
@@ -33,7 +33,7 @@ export default function PollCard({ form, onDelete }: PollCardProps) {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-4 py-3 space-y-1">
+      <CardContent className="px-4 space-y-1">
         {form.description && (
           <p className="text-sm text-muted-foreground">
             {form.description}

@@ -17,6 +17,7 @@ type FormHandler struct {
 	formService           service.FormService
 	formSubmissionService service.FormSubmissionService
 	formAuthService       service.FormAuthorizationService
+	dashboardService      service.DashboardService
 }
 
 func NewFormHandler(
@@ -24,12 +25,14 @@ func NewFormHandler(
 	formSubmissionService service.FormSubmissionService,
 	formAuthService service.FormAuthorizationService,
 	authService service.AuthService,
+	dashboardService service.DashboardService,
 ) *FormHandler {
 	return &FormHandler{
 		formService:           formService,
 		formSubmissionService: formSubmissionService,
 		formAuthService:       formAuthService,
 		authService:           authService,
+		dashboardService:      dashboardService,
 	}
 }
 
