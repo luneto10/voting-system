@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PublicForm, DraftSubmission } from '@/lib/api';
 import { useFormAnswers } from '@/hooks/useFormAnswers';
@@ -24,13 +24,11 @@ export default function ActiveFormSubmission({
 }: ActiveFormSubmissionProps) {
   const navigate = useNavigate();
   const { answers, validationErrors, updateAnswer, validateAnswers, formatAnswersForSubmission } = useFormAnswers(initialAnswers, form.questions);
-  const { autoSave, isSaving } = useAutoSave(form.id);
+  const { autoSave } = useAutoSave(form.id);
 
-  const handleAnswerChange = (questionId: number, value: any, isTextField?: boolean) => {
+  const handleAnswerChange = (questionId: number, value: any) => {
     updateAnswer(questionId, value);
-    if (!isTextField) {
-      autoSave(answers);
-    }
+    autoSave(answers);
   };
 
   const handleSubmit = () => {
@@ -60,19 +58,11 @@ export default function ActiveFormSubmission({
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Submit Your Response</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Please answer all questions below. All fields are required.
-                </p>
-              </div>
-              {isSaving && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Save className="h-4 w-4 animate-pulse" />
-                  Saving...
-                </div>
-              )}
+            <div>
+              <CardTitle>Submit Your Response</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Please answer all questions below. All fields are required.
+              </p>
             </div>
           </CardHeader>
           <CardContent className="space-y-8">
