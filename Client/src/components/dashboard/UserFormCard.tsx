@@ -94,15 +94,15 @@ export default function UserFormCard({ form, onContinueDraft }: UserFormCardProp
 
   return (
     <>
-      <Card className={`transition-all hover:shadow-md ${isExpired ? 'opacity-75' : ''}`}>
-        <CardHeader className="pb-2">
-          <div className="flex items-start justify-between">
+    <Card className={`transition-all hover:shadow-md ${isExpired ? 'opacity-75' : ''}`}>
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            {getStatusIcon()}
+            <CardTitle className="text-lg">{form.form_title}</CardTitle>
+          </div>
             <div className="flex items-center gap-2">
-              {getStatusIcon()}
-              <CardTitle className="text-lg">{form.form_title}</CardTitle>
-            </div>
-            <div className="flex items-center gap-2">
-              {getStatusBadge()}
+          {getStatusBadge()}
               {form.status === 'in_progress' && (
                 <Button
                   variant="ghost"
@@ -114,65 +114,65 @@ export default function UserFormCard({ form, onContinueDraft }: UserFormCardProp
                 </Button>
               )}
             </div>
+        </div>
+        {form.form_description && (
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {form.form_description}
+          </p>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {form.status === 'in_progress' && form.progress_percentage !== undefined && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Progress</span>
+              <span>{Math.round(form.progress_percentage)}%</span>
+            </div>
+            <Progress value={form.progress_percentage} className="h-2" />
           </div>
-          {form.form_description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {form.form_description}
-            </p>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {form.status === 'in_progress' && form.progress_percentage !== undefined && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Progress</span>
-                <span>{Math.round(form.progress_percentage)}%</span>
-              </div>
-              <Progress value={form.progress_percentage} className="h-2" />
+        )}
+
+        <div className="space-y-2 text-sm text-muted-foreground">
+          {form.startAt && (
+            <div className="flex items-center gap-2">
+              <Calendar className="h-3 w-3" />
+              <span>
+                {isUpcoming ? 'Starts' : 'Started'}: {formatDate(form.startAt)}
+              </span>
             </div>
           )}
+          {form.endAt && (
+            <div className="flex items-center gap-2">
+              <Clock className="h-3 w-3" />
+              <span className={isExpired ? 'text-red-600' : ''}>
+                {isExpired ? 'Ended' : 'Ends'}: {formatDate(form.endAt)}
+              </span>
+            </div>
+          )}
+          {form.completed_at && (
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-3 w-3" />
+              <span>Completed: {formatDate(form.completed_at)}</span>
+            </div>
+          )}
+          {form.last_modified && form.status === 'in_progress' && (
+            <div className="flex items-center gap-2">
+              <Clock className="h-3 w-3" />
+              <span>Last modified: {formatDate(form.last_modified)}</span>
+            </div>
+          )}
+        </div>
 
-          <div className="space-y-2 text-sm text-muted-foreground">
-            {form.startAt && (
-              <div className="flex items-center gap-2">
-                <Calendar className="h-3 w-3" />
-                <span>
-                  {isUpcoming ? 'Starts' : 'Started'}: {formatDate(form.startAt)}
-                </span>
-              </div>
-            )}
-            {form.endAt && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-3 w-3" />
-                <span className={isExpired ? 'text-red-600' : ''}>
-                  {isExpired ? 'Ended' : 'Ends'}: {formatDate(form.endAt)}
-                </span>
-              </div>
-            )}
-            {form.completed_at && (
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-3 w-3" />
-                <span>Completed: {formatDate(form.completed_at)}</span>
-              </div>
-            )}
-            {form.last_modified && form.status === 'in_progress' && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-3 w-3" />
-                <span>Last modified: {formatDate(form.last_modified)}</span>
-              </div>
-            )}
-          </div>
-
-          <Button 
-            onClick={handleClick}
-            className="w-full"
-            disabled={isExpired || isUpcoming || false}
-            variant={form.status === 'completed' ? 'outline' : 'default'}
-          >
-            {isExpired ? 'Expired' : isUpcoming ? 'Not Started' : getActionText()}
-          </Button>
-        </CardContent>
-      </Card>
+        <Button 
+          onClick={handleClick}
+          className="w-full"
+          disabled={isExpired || isUpcoming || false}
+          variant={form.status === 'completed' ? 'outline' : 'default'}
+        >
+          {isExpired ? 'Expired' : isUpcoming ? 'Not Started' : getActionText()}
+        </Button>
+      </CardContent>
+    </Card>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

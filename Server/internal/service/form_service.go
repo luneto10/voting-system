@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/jinzhu/copier"
 	"github.com/luneto10/voting-system/api/dto"
 	"github.com/luneto10/voting-system/api/model"
 	"github.com/luneto10/voting-system/internal/repository"
@@ -55,8 +54,58 @@ func (s *FormServiceImpl) UpdateForm(id uint, userID uint, updateForm *dto.Updat
 		return nil, ErrFormNotFound
 	}
 
-	if err := copier.Copy(&originalForm, &updateForm); err != nil {
-		return nil, err
+	// Handle deleted questions
+	if len(updateForm.DeletedQuestionIds) > 0 {
+		for _, questionID := range updateForm.DeletedQuestionIds {
+			if err := s.formRepository.DeleteQuestion(questionID); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// Update form fields
+	if updateForm.Title != nil {
+		originalForm.Title = *updateForm.Title
+	}
+	if updateForm.Description != nil {
+		originalForm.Description = *updateForm.Description
+	}
+	if updateForm.StartAt != nil {
+		originalForm.StartAt = *updateForm.StartAt
+	}
+	if updateForm.EndAt != nil {
+		originalForm.EndAt = *updateForm.EndAt
+	}
+
+	// Update questions
+	if updateForm.Questions != nil {
+		questions := make([]model.Question, len(updateForm.Questions))
+		for i, q := range updateForm.Questions {
+			question := model.Question{
+				Title: *q.Title,
+				Type:  model.QuestionType(*q.Type),
+			}
+			if q.ID != nil {
+				question.ID = *q.ID
+			}
+
+			// Update options
+			if q.Options != nil {
+				options := make([]*model.Option, len(q.Options))
+				for j, o := range q.Options {
+					option := &model.Option{
+						Title: o.Title,
+					}
+					if o.ID != nil {
+						option.ID = *o.ID
+					}
+					options[j] = option
+				}
+				question.Options = options
+			}
+			questions[i] = question
+		}
+		originalForm.Questions = questions
 	}
 
 	if err := s.formRepository.UpdateForm(id, originalForm); err != nil {

@@ -85,7 +85,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <Button onClick={() => navigate('/polls')} variant="outline">
-          Browse All Forms
+          Browse All My Pollse
         </Button>
       </div>
 

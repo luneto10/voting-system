@@ -3,22 +3,23 @@ package dto
 import "time"
 
 type UpdateFormRequest struct {
-	Title       *string                 `json:"title" binding:"omitempty,min=5,max=100"`
-	Description *string                 `json:"description" binding:"omitempty"`
-	StartAt     *time.Time              `json:"startAt" binding:"omitempty"`
-	EndAt       *time.Time              `json:"endAt" binding:"omitempty"`
-	Questions   []UpdateQuestionRequest `json:"questions" binding:"omitempty,dive"`
+	Title              *string                 `json:"title" binding:"omitempty,min=5,max=100"`
+	Description        *string                 `json:"description" binding:"omitempty"`
+	StartAt            *time.Time              `json:"startAt" binding:"omitempty"`
+	EndAt              *time.Time              `json:"endAt" binding:"omitempty"`
+	Questions          []UpdateQuestionRequest `json:"questions" binding:"omitempty,dive"`
+	DeletedQuestionIds []uint                  `json:"deletedQuestionIds" binding:"omitempty"`
 }
 
 type UpdateQuestionRequest struct {
-	ID      uint                  `json:"id" binding:"required"`
+	ID      *uint                 `json:"id" binding:"omitempty"`
 	Title   *string               `json:"title" binding:"omitempty"`
 	Type    *string               `json:"type" binding:"omitempty"`
 	Options []UpdateOptionRequest `json:"options" binding:"omitempty,dive"`
 }
 
 type UpdateOptionRequest struct {
-	ID    uint   `json:"id" binding:"required"`
+	ID    *uint  `json:"id" binding:"omitempty"`
 	Title string `json:"title" binding:"omitempty"`
 }
 

@@ -17,29 +17,29 @@ export function useAutoSave(formId: number) {
   });
 
   const formatAndSaveDraft = (answers: Record<number, any>) => {
-    const formattedAnswers = Object.entries(answers).map(([questionId, value]) => {
-      if (Array.isArray(value)) {
+      const formattedAnswers = Object.entries(answers).map(([questionId, value]) => {
+        if (Array.isArray(value)) {
+          return {
+            question_id: parseInt(questionId),
+            option_ids: value,
+          };
+        }
         return {
           question_id: parseInt(questionId),
-          option_ids: value,
+          text: value,
         };
-      }
-      return {
-        question_id: parseInt(questionId),
-        text: value,
+      });
+
+      const draftData: SaveDraftRequest = {
+        form_id: formId,
+        answers: formattedAnswers,
       };
-    });
 
-    const draftData: SaveDraftRequest = {
-      form_id: formId,
-      answers: formattedAnswers,
-    };
-
-    // Only save if the data has changed
-    if (JSON.stringify(draftData) !== JSON.stringify(lastSavedRef.current)) {
-      saveDraftMutation.mutate(draftData);
-      lastSavedRef.current = draftData;
-    }
+      // Only save if the data has changed
+      if (JSON.stringify(draftData) !== JSON.stringify(lastSavedRef.current)) {
+        saveDraftMutation.mutate(draftData);
+        lastSavedRef.current = draftData;
+      }
   };
 
   const autoSave = (answers: Record<number, any>) => {

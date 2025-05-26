@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -24,20 +24,22 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { formsApi, ApiError } from '@/lib/api';
+import { formsApi, ApiError, UpdateFormRequest } from '@/lib/api';
 import { toast } from 'sonner';
 import { DateRange } from 'react-day-picker';
 
 const questionSchema = z.object({
+  id: z.number().optional(),
   title: z.string().min(1, 'Question title is required'),
   type: z.enum(['single_choice', 'multiple_choice', 'text']),
   options: z.array(
     z.object({
+      id: z.number().optional(),
       title: z.string().min(1, 'Option title is required'),
     })
   ).optional().nullable(),
@@ -59,12 +61,20 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function CreatePoll() {
+export default function EditPoll() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const queryClient = useQueryClient();
   const [date, setDate] = useState<DateRange | undefined>();
+  const [deletedQuestionIds, setDeletedQuestionIds] = useState<number[]>([]);
 
-  const form = useForm<FormValues>({
+  const { data: form, isLoading } = useQuery({
+    queryKey: ['form', id],
+    queryFn: () => formsApi.getById(Number(id)),
+    enabled: !!id,
+  });
+
+  const formInstance = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
@@ -81,53 +91,96 @@ export default function CreatePoll() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
+  const { fields, append, remove: removeQuestion } = useFieldArray({
+    control: formInstance.control,
     name: 'questions',
   });
 
-  const createPollMutation = useMutation({
-    mutationFn: formsApi.create,
+  useEffect(() => {
+    if (form?.data) {
+      const formData = form.data;
+      formInstance.reset({
+        title: formData.title,
+        description: formData.description || '',
+        startAt: formData.startAt ? new Date(formData.startAt) : null,
+        endAt: formData.endAt ? new Date(formData.endAt) : null,
+        questions: formData.questions.map(q => ({
+          id: q.id,
+          title: q.title,
+          type: q.type,
+          options: q.options?.map(o => ({
+            id: o.id,
+            title: o.title,
+          })) || [],
+        })),
+      });
+
+      if (formData.startAt && formData.endAt) {
+        setDate({
+          from: new Date(formData.startAt),
+          to: new Date(formData.endAt),
+        });
+      }
+    }
+  }, [form?.data, formInstance]);
+
+  const updatePollMutation = useMutation({
+    mutationFn: (data: UpdateFormRequest) => formsApi.update(Number(id), data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['forms'] });
-      toast.success('Poll created successfully');
+      queryClient.invalidateQueries({ queryKey: ['form', id] });
+      toast.success('Poll updated successfully');
       navigate('/polls');
     },
     onError: (error: any) => {
       const apiError = error.response?.data as ApiError;
       if (apiError?.errors) {
         apiError.errors.forEach((err: { field: string; message: string }) => {
-          form.setError(err.field as any, {
+          formInstance.setError(err.field as any, {
             type: 'manual',
             message: err.message,
           });
         });
       } else {
-        toast.error(error.response?.data?.message || 'Failed to create poll');
+        toast.error(error.response?.data?.message || 'Failed to update poll');
       }
     },
   });
 
+  const handleRemoveQuestion = (questionIndex: number) => {
+    const question = formInstance.getValues(`questions.${questionIndex}`);
+    if (question.id) {
+      setDeletedQuestionIds(prev => [...prev, question.id as number]);
+    }
+    removeQuestion(questionIndex);
+  };
+
   const onSubmit = (data: FormValues) => {
-    console.log('Form data before formatting:', data);
-    
-    const formattedData = {
-      ...data,
+    const formattedData: UpdateFormRequest = {
+      title: data.title,
+      description: data.description || undefined,
       startAt: data.startAt?.toISOString() || null,
       endAt: data.endAt?.toISOString() || null,
       questions: data.questions.map(question => {
         if (question.type === 'text') {
           return {
+            id: question.id,
             title: question.title,
             type: question.type
           };
         }
-        return question;
-      })
+        return {
+          ...question,
+          options: question.options?.map(option => ({
+            id: option.id,
+            title: option.title,
+          })),
+        };
+      }),
+      deletedQuestionIds: deletedQuestionIds.length > 0 ? deletedQuestionIds : undefined
     };
     
-    console.log('Formatted data:', formattedData);
-    createPollMutation.mutate(formattedData);
+    updatePollMutation.mutate(formattedData);
   };
 
   const addQuestion = () => {
@@ -139,16 +192,16 @@ export default function CreatePoll() {
   };
 
   const addOption = (questionIndex: number) => {
-    const currentOptions = form.getValues(`questions.${questionIndex}.options`) || [];
-    form.setValue(`questions.${questionIndex}.options`, [
+    const currentOptions = formInstance.getValues(`questions.${questionIndex}.options`) || [];
+    formInstance.setValue(`questions.${questionIndex}.options`, [
       ...currentOptions,
       { title: '' },
     ]);
   };
 
   const removeOption = (questionIndex: number, optionIndex: number) => {
-    const currentOptions = form.getValues(`questions.${questionIndex}.options`) || [];
-    form.setValue(
+    const currentOptions = formInstance.getValues(`questions.${questionIndex}.options`) || [];
+    formInstance.setValue(
       `questions.${questionIndex}.options`,
       currentOptions.filter((_, i) => i !== optionIndex)
     );
@@ -156,34 +209,42 @@ export default function CreatePoll() {
 
   const handleQuestionTypeChange = (questionIndex: number, type: 'single_choice' | 'multiple_choice' | 'text') => {
     if (type === 'text') {
-      form.setValue(`questions.${questionIndex}.options`, undefined);
+      formInstance.setValue(`questions.${questionIndex}.options`, undefined);
     } else {
-      const currentOptions = form.getValues(`questions.${questionIndex}.options`);
+      const currentOptions = formInstance.getValues(`questions.${questionIndex}.options`);
       if (!currentOptions || currentOptions.length === 0) {
-        form.setValue(`questions.${questionIndex}.options`, [{ title: '' }]);
+        formInstance.setValue(`questions.${questionIndex}.options`, [{ title: '' }]);
       }
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center py-6 overflow-x-hidden">
       <div className="w-full max-w-3xl px-2">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Create New Poll</h1>
+          <h1 className="text-2xl font-bold">Edit Poll</h1>
           <Button variant="outline" onClick={() => navigate('/polls')}>
             Cancel
           </Button>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-full">
+        <Form {...formInstance}>
+          <form onSubmit={formInstance.handleSubmit(onSubmit)} className="space-y-4 w-full">
             <Card className="w-full">
               <CardHeader className="px-4 py-3">
                 <CardTitle>Poll Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 px-4">
                 <FormField
-                  control={form.control}
+                  control={formInstance.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
@@ -197,7 +258,7 @@ export default function CreatePoll() {
                 />
 
                 <FormField
-                  control={form.control}
+                  control={formInstance.control}
                   name="description"
                   render={({ field }) => (
                     <FormItem>
@@ -215,7 +276,7 @@ export default function CreatePoll() {
                 />
 
                 <FormField
-                  control={form.control}
+                  control={formInstance.control}
                   name="startAt"
                   render={() => (
                     <FormItem className="flex flex-col">
@@ -253,10 +314,10 @@ export default function CreatePoll() {
                             onSelect={(range) => {
                               setDate(range);
                               if (range?.from) {
-                                form.setValue('startAt', range.from);
+                                formInstance.setValue('startAt', range.from);
                               }
                               if (range?.to) {
-                                form.setValue('endAt', range.to);
+                                formInstance.setValue('endAt', range.to);
                               }
                             }}
                             disabled={(date) => {
@@ -289,7 +350,7 @@ export default function CreatePoll() {
                           type="button"
                           variant="destructive"
                           size="icon"
-                          onClick={() => remove(questionIndex)}
+                          onClick={() => handleRemoveQuestion(questionIndex)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -297,7 +358,7 @@ export default function CreatePoll() {
                     </div>
 
                     <FormField
-                      control={form.control}
+                      control={formInstance.control}
                       name={`questions.${questionIndex}.title`}
                       render={({ field }) => (
                         <FormItem>
@@ -311,7 +372,7 @@ export default function CreatePoll() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={formInstance.control}
                       name={`questions.${questionIndex}.type`}
                       render={({ field }) => (
                         <FormItem>
@@ -343,14 +404,14 @@ export default function CreatePoll() {
                       )}
                     />
 
-                    {form.watch(`questions.${questionIndex}.type`) !== 'text' && (
+                    {formInstance.watch(`questions.${questionIndex}.type`) !== 'text' && (
                       <div className="space-y-2">
                         <FormLabel>Options</FormLabel>
-                        {form.watch(`questions.${questionIndex}.options`)?.map(
+                        {formInstance.watch(`questions.${questionIndex}.options`)?.map(
                           (_, optionIndex) => (
                             <div key={optionIndex} className="flex gap-2">
                               <FormField
-                                control={form.control}
+                                control={formInstance.control}
                                 name={`questions.${questionIndex}.options.${optionIndex}.title`}
                                 render={({ field }) => (
                                   <FormItem className="flex-1">
@@ -364,7 +425,7 @@ export default function CreatePoll() {
                                   </FormItem>
                                 )}
                               />
-                              {(form.watch(`questions.${questionIndex}.options`) || []).length >
+                              {(formInstance.watch(`questions.${questionIndex}.options`) || []).length >
                                 1 && (
                                 <Button
                                   type="button"
@@ -416,9 +477,9 @@ export default function CreatePoll() {
               </Button>
               <Button 
                 type="submit"
-                disabled={createPollMutation.isPending}
+                disabled={updatePollMutation.isPending}
               >
-                {createPollMutation.isPending ? 'Creating...' : 'Create Poll'}
+                {updatePollMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
           </form>

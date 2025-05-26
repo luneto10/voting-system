@@ -219,6 +219,20 @@ export interface ActivityResponse {
   per_page: number;
 }
 
+export interface UpdateFormRequest {
+  title: string;
+  description?: string;
+  startAt: string | null;
+  endAt: string | null;
+  questions: {
+    id?: number;
+    title: string;
+    type: 'single_choice' | 'multiple_choice' | 'text';
+    options?: { id?: number; title: string }[] | null;
+  }[];
+  deletedQuestionIds?: number[];
+}
+
 export const formsApi = {
   create: async (data: CreateFormRequest) => {
     const response = await api.post<ApiResponse<{ id: number }>>('/forms', data);
@@ -230,6 +244,10 @@ export const formsApi = {
   },
   getById: async (id: number) => {
     const response = await api.get<ApiResponse<Form>>(`/forms/${id}`);
+    return response.data;
+  },
+  update: async (id: number, data: UpdateFormRequest) => {
+    const response = await api.put<ApiResponse<Form>>(`/forms/${id}`, data);
     return response.data;
   },
   getPublicById: async (id: number) => {

@@ -13,7 +13,7 @@ interface SubmissionLinkProps {
 export default function SubmissionLink({ formId, formTitle }: SubmissionLinkProps) {
   const [copied, setCopied] = useState(false);
   
-  const submissionUrl = `${window.location.origin}/forms/${formId}/submit`;
+  const submissionUrl = `${window.location.origin}/polls/${formId}/submit`;
 
   const copyToClipboard = async () => {
     try {
@@ -22,13 +22,7 @@ export default function SubmissionLink({ formId, formTitle }: SubmissionLinkProp
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = submissionUrl;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
+      await navigator.clipboard.writeText(submissionUrl);
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);

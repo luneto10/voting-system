@@ -18,6 +18,7 @@ type FormRepository interface {
 	GetSubmissionsByUserID(userID uint) ([]*model.Submission, error)
 	GetFormVoters(formID uint) ([]*model.Submission, error)
 	UserSubmittedForm(userID uint, formID uint) (bool, error)
+	DeleteQuestion(id uint) error
 }
 
 type FormRepositoryImpl struct {
@@ -155,4 +156,8 @@ func (r *FormRepositoryImpl) UserSubmittedForm(userID uint, formID uint) (bool, 
 		return false, err
 	}
 	return true, nil
+}
+
+func (r *FormRepositoryImpl) DeleteQuestion(id uint) error {
+	return r.db.Delete(&model.Question{}, id).Error
 }

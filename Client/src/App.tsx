@@ -16,6 +16,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import AuthProvider from '@/components/auth/AuthProvider';
 import { queryClient } from '@/lib/query';
 import Activity from './pages/Activity';
+import EditPoll from '@/pages/EditPoll';
 
 function App() {
   return (
@@ -28,7 +29,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               
               <Route 
-                path="/forms/:id/submit" 
+                path="/polls/:id/submit" 
                 element={
                   <SubmissionProtectedRoute>
                     <RootLayout>
@@ -50,6 +51,7 @@ function App() {
                         <Route path="polls" element={<Polls />} />
                         <Route path="polls/create" element={<CreatePoll />} />
                         <Route path="polls/:id" element={<PollDetail />} />
+                        <Route path="polls/:id/edit" element={<EditPoll />} />
                         <Route path="search" element={<Search />} />
                       </Routes>
                     </RootLayout>

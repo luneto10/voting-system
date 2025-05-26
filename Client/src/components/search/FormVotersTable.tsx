@@ -29,35 +29,35 @@ export default function FormVotersTable({ voters }: FormVotersTableProps) {
     <div className="space-y-4">
       {/* Desktop Table View */}
       <div className="hidden md:block">
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Completed At</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {voters.map((voter) => (
-                <TableRow key={voter.id}>
-                  <TableCell className="font-medium">{voter.email}</TableCell>
-                  <TableCell>
-                    {voter.completed_at ? formatDate(voter.completed_at) : 'Not completed'}
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      voter.completed_at 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                    }`}>
-                      {voter.completed_at ? 'Completed' : 'In Progress'}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Email</TableHead>
+            <TableHead>Completed At</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {voters.map((voter) => (
+            <TableRow key={voter.id}>
+              <TableCell className="font-medium">{voter.email}</TableCell>
+              <TableCell>
+                {voter.completed_at ? formatDate(voter.completed_at) : 'Not completed'}
+              </TableCell>
+              <TableCell>
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  voter.completed_at 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                }`}>
+                  {voter.completed_at ? 'Completed' : 'In Progress'}
+                </span>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
         </div>
       </div>
 
