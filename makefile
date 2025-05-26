@@ -5,7 +5,7 @@ CLIENT_DIR = cd Client &&
 
 # Default target - runs both server and client
 run:
-	$(SERVER_DIR) air & $(CLIENT_DIR) npm run dev
+	$(SERVER_DIR) air & $(CLIENT_DIR) npm run dev -- --host
 
 # Run only the server
 run-server:

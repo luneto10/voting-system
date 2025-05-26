@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Copy, Check, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface SubmissionLinkProps {
   formId: number;
@@ -15,16 +15,10 @@ export default function SubmissionLink({ formId, formTitle }: SubmissionLinkProp
   
   const submissionUrl = `${window.location.origin}/polls/${formId}/submit`;
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(submissionUrl);
+  const handleCopy = async () => {
+    const success = await copyToClipboard(submissionUrl);
+    if (success) {
       setCopied(true);
-      toast.success('Link copied to clipboard!');
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      await navigator.clipboard.writeText(submissionUrl);
-      setCopied(true);
-      toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -51,7 +45,7 @@ export default function SubmissionLink({ formId, formTitle }: SubmissionLinkProp
           <Button
             variant="outline"
             size="icon"
-            onClick={copyToClipboard}
+            onClick={handleCopy}
             className="flex-shrink-0"
           >
             {copied ? (

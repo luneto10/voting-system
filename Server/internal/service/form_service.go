@@ -58,7 +58,7 @@ func (s *FormServiceImpl) UpdateForm(id uint, userID uint, updateForm *dto.Updat
 	if len(updateForm.DeletedQuestionIds) > 0 {
 		for _, questionID := range updateForm.DeletedQuestionIds {
 			if err := s.formRepository.DeleteQuestion(questionID); err != nil {
-		return nil, err
+				return nil, err
 			}
 		}
 	}
@@ -103,6 +103,31 @@ func (s *FormServiceImpl) UpdateForm(id uint, userID uint, updateForm *dto.Updat
 				}
 				question.Options = options
 			}
+
+			if q.ID != nil {
+				originalQuestion := originalForm.Questions[i]
+				originalOptionIDs := make(map[uint]bool)
+				for _, opt := range originalQuestion.Options {
+					originalOptionIDs[opt.ID] = true
+				}
+
+				// Find and delete options that are no longer present
+				for _, opt := range originalQuestion.Options {
+					optionStillExists := false
+					for _, newOpt := range q.Options {
+						if newOpt.ID != nil && *newOpt.ID == opt.ID {
+							optionStillExists = true
+							break
+						}
+					}
+					if !optionStillExists {
+						if err := s.formRepository.DeleteOption(opt.ID); err != nil {
+							return nil, err
+						}
+					}
+				}
+			}
+
 			questions[i] = question
 		}
 		originalForm.Questions = questions
