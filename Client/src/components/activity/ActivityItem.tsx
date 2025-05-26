@@ -44,20 +44,22 @@ export default function ActivityItem({ activity }: ActivityItemProps) {
   return (
     <div
       key={`${activity.form_id}-${activity.completed_at || activity.last_modified}`}
-      className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-3 sm:gap-4"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-start sm:items-center gap-3">
         {getStatusIcon(activity.status)}
-        <div>
-          <p className="font-medium">{activity.form_title}</p>
-          <p className="text-sm text-muted-foreground">
+        <div className="flex-1 min-w-0">
+          <p className="font-medium truncate">{activity.form_title}</p>
+          <p className="text-sm text-muted-foreground break-words">
             {getStatusText(activity.status)}
             {activity.completed_at && ` • Completed on ${formatDate(activity.completed_at)}`}
             {activity.last_modified && !activity.completed_at && ` • Last modified on ${formatDate(activity.last_modified)}`}
           </p>
         </div>
       </div>
-      {getStatusBadge(activity.status)}
+      <div className="flex-shrink-0">
+        {getStatusBadge(activity.status)}
+      </div>
     </div>
   );
 } 

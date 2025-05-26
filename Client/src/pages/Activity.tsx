@@ -96,14 +96,14 @@ export default function Activity() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Activity History</h1>
+    <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold">Activity History</h1>
         <Select value={statusFilter} onValueChange={(value) => {
           setStatusFilter(value);
           setPage(1);
         }}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -114,11 +114,11 @@ export default function Activity() {
         </Select>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="w-full">
+        <CardHeader className="px-4 sm:px-6">
           <CardTitle>Recent Activities</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           {isLoading ? (
             <LoadingCard message="Loading activities..." />
           ) : activities?.data.data.length === 0 ? (
@@ -132,9 +132,9 @@ export default function Activity() {
               </div>
 
               {totalPages > 1 && (
-                <div className="mt-4">
+                <div className="mt-6">
                   <Pagination>
-                    <PaginationContent>
+                    <PaginationContent className="flex-wrap">
                       <PaginationItem>
                         <PaginationPrevious
                           onClick={() => setPage(p => Math.max(1, p - 1))}

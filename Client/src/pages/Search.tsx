@@ -61,10 +61,8 @@ export default function Search() {
 
       {selectedFormId && (
         <>
-          {/* User Vote Checker */}
           <UserVoteChecker formId={Number(selectedFormId)} />
 
-          {/* Voters Table */}
           <Card>
             <CardHeader>
               <CardTitle>Form Voters</CardTitle>
