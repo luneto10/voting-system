@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { formsApi, DashboardData, DashboardForm, ApiResponse } from '@/lib/api';
-import { FileText, Clock, CheckCircle, Activity } from 'lucide-react';
+import { Clock, CheckCircle, Activity } from 'lucide-react';
 import UserFormCard from '@/components/dashboard/UserFormCard';
 import LoadingCard from '@/components/common/LoadingCard';
 import EmptyState from '@/components/common/EmptyState';

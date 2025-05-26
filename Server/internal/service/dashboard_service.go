@@ -13,6 +13,9 @@ import (
 type DashboardService interface {
 	GetDashboardData(userID uint) (*dto.DashboardData, error)
 	UpdateUserFormStatus(userID uint, formID uint, status string) error
+	GetUserFormParticipation(userID uint, formID uint) (*dto.FormParticipation, error)
+	DeleteFormParticipation(userID uint, formID uint) error
+	GetUserActivities(userID uint, status string, page, perPage int) ([]dto.DashboardActivity, int64, error)
 }
 
 type DashboardServiceImpl struct {
@@ -186,4 +189,43 @@ func (s *DashboardServiceImpl) UpdateUserFormStatus(userID uint, formID uint, st
 	}
 
 	return s.dashboardRepository.UpdateUserFormParticipation(participation)
+}
+
+func (s *DashboardServiceImpl) GetUserFormParticipation(userID uint, formID uint) (*dto.FormParticipation, error) {
+	participation, err := s.dashboardRepository.GetUserFormParticipation(userID, formID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.FormParticipation{
+		Status:       participation.Status,
+		LastModified: participation.LastModified,
+	}, nil
+}
+
+func (s *DashboardServiceImpl) DeleteFormParticipation(userID uint, formID uint) error {
+	return s.dashboardRepository.DeleteFormParticipation(userID, formID)
+}
+
+func (s *DashboardServiceImpl) GetUserActivities(userID uint, status string, page, perPage int) ([]dto.DashboardActivity, int64, error) {
+	activities, total, err := s.dashboardRepository.GetUserActivities(userID, status, page, perPage)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	activityList := make([]dto.DashboardActivity, len(activities))
+	for i, activity := range activities {
+		// Use copier for basic fields
+		if err := copier.Copy(&activityList[i], activity); err != nil {
+			return nil, 0, err
+		}
+
+		// Set fields that need special handling
+		activityList[i].FormTitle = activity.Form.Title
+		activityList[i].FormDescription = activity.Form.Description
+		activityList[i].StartAt = activity.Form.StartAt
+		activityList[i].EndAt = activity.Form.EndAt
+	}
+
+	return activityList, total, nil
 }

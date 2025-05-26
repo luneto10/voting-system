@@ -114,15 +114,33 @@ func (r *FormRepositoryImpl) GetSubmissionsByUserID(userID uint) ([]*model.Submi
 
 func (r *FormRepositoryImpl) GetFormVoters(formID uint) ([]*model.Submission, error) {
 	var submissions []*model.Submission
+
+	// First get all submissions
 	if err := r.db.
 		Preload("User").
-		Select("id, user_id, form_id, created_at, completed_at").
-		Where(&model.Submission{FormID: formID}).
-		Order("created_at DESC").
+		Where("form_id = ?", formID).
 		Find(&submissions).Error; err != nil {
 		return nil, err
 	}
-	
+
+	// Then get all in-progress users
+	var inProgressUsers []*model.UserFormParticipation
+	if err := r.db.
+		Preload("User").
+		Where("form_id = ? AND status = 'in_progress'", formID).
+		Find(&inProgressUsers).Error; err != nil {
+		return nil, err
+	}
+
+	// Convert in-progress users to submissions format
+	for _, participation := range inProgressUsers {
+		submissions = append(submissions, &model.Submission{
+			UserID: participation.UserID,
+			FormID: participation.FormID,
+			User:   participation.User,
+		})
+	}
+
 	return submissions, nil
 }
 

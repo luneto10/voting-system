@@ -94,3 +94,8 @@ type GetDraftResponse struct {
 	ProgressPercentage float64            `json:"progress_percentage"`
 	Answers            []AnswerSubmission `json:"answers"`
 }
+
+type FormParticipation struct {
+	Status       string    `json:"status"`
+	LastModified time.Time `json:"last_modified"`
+}

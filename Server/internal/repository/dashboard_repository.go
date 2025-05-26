@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	"github.com/luneto10/voting-system/api/model"
@@ -14,6 +15,8 @@ type DashboardRepository interface {
 	GetUserFormsWithParticipation(userID uint) ([]*model.Form, error)
 	GetUserFormStatistics(userID uint) (available, inProgress, completed, recentActivity int, err error)
 	GetUserRecentActivity(userID uint, limit int) ([]*model.UserFormParticipation, error)
+	DeleteFormParticipation(userID uint, formID uint) error
+	GetUserActivities(userID uint, status string, page, perPage int) ([]*model.UserFormParticipation, int64, error)
 }
 
 type DashboardRepositoryImpl struct {
@@ -26,11 +29,12 @@ func NewDashboardRepository(db *gorm.DB) DashboardRepository {
 
 func (r *DashboardRepositoryImpl) GetUserFormParticipation(userID uint, formID uint) (*model.UserFormParticipation, error) {
 	var participation model.UserFormParticipation
-	err := r.db.
-		Where("user_id = ? AND form_id = ?", userID, formID).
-		First(&participation).Error
-	if err != nil {
-		return nil, err
+	result := r.db.Where("user_id = ? AND form_id = ?", userID, formID).First(&participation)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, result.Error
 	}
 	return &participation, nil
 }
@@ -106,4 +110,37 @@ func (r *DashboardRepositoryImpl) GetUserRecentActivity(userID uint, limit int) 
 		Find(&activities).Error
 
 	return activities, err
+}
+
+func (r *DashboardRepositoryImpl) DeleteFormParticipation(userID uint, formID uint) error {
+	return r.db.Where("user_id = ? AND form_id = ?", userID, formID).Delete(&model.UserFormParticipation{}).Error
+}
+
+func (r *DashboardRepositoryImpl) GetUserActivities(userID uint, status string, page, perPage int) ([]*model.UserFormParticipation, int64, error) {
+	var activities []*model.UserFormParticipation
+	var total int64
+
+	query := r.db.Model(&model.UserFormParticipation{}).
+		Preload("Form").
+		Where("user_id = ?", userID)
+
+	if status != "all" {
+		query = query.Where("status = ?", status)
+	}
+
+	// Get total count
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Get paginated results
+	offset := (page - 1) * perPage
+	err = query.
+		Order("last_modified DESC").
+		Offset(offset).
+		Limit(perPage).
+		Find(&activities).Error
+
+	return activities, total, err
 }

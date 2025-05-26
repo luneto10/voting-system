@@ -66,3 +66,52 @@ func (h *DashboardHandler) UpdateFormStatus(c *gin.Context) {
 		"status":  status,
 	})
 }
+
+func (h *DashboardHandler) DeleteFormParticipation(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	formID, err := strconv.ParseUint(c.Param("formId"), 10, 32)
+	if err != nil {
+		schema.SendError(c, http.StatusBadRequest, "invalid form ID")
+		return
+	}
+
+	err = h.dashboardService.DeleteFormParticipation(userID, uint(formID))
+	if err != nil {
+		schema.SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	schema.SendSuccess(c, "delete-form-participation", gin.H{
+		"form_id": formID,
+	})
+}
+
+func (h *DashboardHandler) GetUserActivities(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	status := c.DefaultQuery("status", "all")
+	page := c.DefaultQuery("page", "1")
+	perPage := c.DefaultQuery("per_page", "10")
+
+	pageNum, err := strconv.Atoi(page)
+	if err != nil || pageNum < 1 {
+		pageNum = 1
+	}
+
+	perPageNum, err := strconv.Atoi(perPage)
+	if err != nil || perPageNum < 1 {
+		perPageNum = 10
+	}
+
+	activities, total, err := h.dashboardService.GetUserActivities(userID, status, pageNum, perPageNum)
+	if err != nil {
+		schema.SendError(c, http.StatusInternalServerError, "failed to get user activities")
+		return
+	}
+
+	schema.SendSuccess(c, "user-activities", gin.H{
+		"data":     activities,
+		"total":    total,
+		"page":     pageNum,
+		"per_page": perPageNum,
+	})
+}

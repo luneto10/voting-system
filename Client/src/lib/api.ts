@@ -201,6 +201,24 @@ export interface DashboardData {
 
 export interface UserDashboardData extends DashboardData {}
 
+export interface Activity {
+  form_id: number;
+  form_title: string;
+  form_description: string;
+  status: string;
+  completed_at?: string;
+  last_modified?: string;
+  startAt: string;
+  endAt: string;
+}
+
+export interface ActivityResponse {
+  data: Activity[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
 export const formsApi = {
   create: async (data: CreateFormRequest) => {
     const response = await api.post<ApiResponse<{ id: number }>>('/forms', data);
@@ -249,7 +267,15 @@ export const formsApi = {
   deleteDraft: async (formId: number) => {
     const response = await api.delete<ApiResponse<{ message: string }>>(`/drafts/${formId}`);
     return response.data;
-  }
+  },
+  deleteFormParticipation: async (formId: number) => {
+    const response = await api.delete<ApiResponse<{ message: string }>>(`/dashboard/forms/${formId}/status`);
+    return response.data;
+  },
+  getUserActivities: async (status: string, page: number, perPage: number): Promise<ApiResponse<ActivityResponse>> => {
+    const response = await api.get(`/dashboard/activities?status=${status}&page=${page}&per_page=${perPage}`);
+    return response.data;
+  },
 };
 
 export default api; 

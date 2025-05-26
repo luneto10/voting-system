@@ -90,8 +90,10 @@ type SubmitFormResponse struct {
 }
 
 type FormVoterResponse struct {
-	ID          uint       `json:"id"`
-	UserID      uint       `json:"user_id"`
-	Email       string     `json:"email"`
-	CompletedAt *time.Time `json:"completed_at"`
+	ID           uint       `json:"id"`
+	UserID       uint       `json:"user_id"`
+	Email        string     `json:"email"`
+	CompletedAt  *time.Time `json:"completed_at,omitempty"`
+	Status       string     `json:"status"` // available, in_progress, completed
+	LastModified *time.Time `json:"last_modified,omitempty"`
 }

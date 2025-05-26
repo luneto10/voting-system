@@ -35,6 +35,8 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 		{
 			dashboard.GET("", middleware.AuthMiddleware(), handlers.DashboardHandler.GetDashboard)
 			dashboard.PUT("/forms/:formId/status/:status", middleware.AuthMiddleware(), handlers.DashboardHandler.UpdateFormStatus)
+			dashboard.DELETE("/forms/:formId/status", middleware.AuthMiddleware(), handlers.DashboardHandler.DeleteFormParticipation)
+			dashboard.GET("/activities", middleware.AuthMiddleware(), handlers.DashboardHandler.GetUserActivities)
 		}
 
 		drafts := v1.Group("/drafts")

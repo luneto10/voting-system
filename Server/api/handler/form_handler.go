@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -300,11 +301,25 @@ func (h *FormHandler) GetFormVoters(c *gin.Context) {
 
 	resp := make([]dto.FormVoterResponse, len(submissions))
 	for i, submission := range submissions {
+		// Get participation status for each user
+		participation, err := h.dashboardService.GetUserFormParticipation(submission.UserID, uint(formID))
+		var status string
+		var lastModified *time.Time
+
+		if err == nil && participation != nil {
+			status = participation.Status
+			lastModified = &participation.LastModified
+		} else {
+			status = "available"
+		}
+
 		resp[i] = dto.FormVoterResponse{
-			ID:          submission.ID,
-			UserID:      submission.UserID,
-			Email:       submission.User.Email,
-			CompletedAt: submission.CompletedAt,
+			ID:           submission.ID,
+			UserID:       submission.UserID,
+			Email:        submission.User.Email,
+			CompletedAt:  submission.CompletedAt,
+			Status:       status,
+			LastModified: lastModified,
 		}
 	}
 
