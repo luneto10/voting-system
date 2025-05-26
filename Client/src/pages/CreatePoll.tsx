@@ -222,33 +222,32 @@ export default function CreatePoll() {
                       <FormLabel>Date Range</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !date && "text-muted-foreground"
-                              )}
-                            >
-                              {date?.from ? (
-                                date.to ? (
-                                  <>
-                                    {format(date.from, "LLL dd, y")} -{" "}
-                                    {format(date.to, "LLL dd, y")}
-                                  </>
-                                ) : (
-                                  format(date.from, "LLL dd, y")
-                                )
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !date && "text-muted-foreground"
+                            )}
+                          >
+                            {date?.from ? (
+                              date.to ? (
+                                <>
+                                  {format(date.from, "LLL dd, y")} -{" "}
+                                  {format(date.to, "LLL dd, y")}
+                                </>
                               ) : (
-                                <span>Pick a date range</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
+                                format(date.from, "LLL dd, y")
+                              )
+                            ) : (
+                              <span>Pick a date range</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="range"
+                            defaultMonth={date?.from}
                             selected={date}
                             onSelect={(range) => {
                               setDate(range);
@@ -259,12 +258,12 @@ export default function CreatePoll() {
                                 form.setValue('endAt', range.to);
                               }
                             }}
+                            numberOfMonths={2}
                             disabled={(date) => {
                               const today = new Date();
                               today.setHours(0, 0, 0, 0);
                               return date < today || date > new Date("2100-01-01");
                             }}
-                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
