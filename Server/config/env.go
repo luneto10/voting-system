@@ -7,9 +7,9 @@ import (
 )
 
 func LoadEnv() error {
-	if err := godotenv.Load(); err != nil {
-		return err
-	}
+	// Try to load .env file, but don't fail if it doesn't exist
+	// This allows the application to work both in development and production
+	_ = godotenv.Load()
 	return nil
 }
 
