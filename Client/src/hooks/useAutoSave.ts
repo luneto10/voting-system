@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export function useAutoSave(formId: number) {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedRef = useRef<SaveDraftRequest | null>(null);
+  const currentAnswersRef = useRef<Record<number, any>>({});
 
   const saveDraftMutation = useMutation({
     mutationFn: (data: SaveDraftRequest) => formsApi.saveDraft(data),
@@ -15,43 +16,53 @@ export function useAutoSave(formId: number) {
     },
   });
 
+  const formatAndSaveDraft = (answers: Record<number, any>) => {
+    const formattedAnswers = Object.entries(answers).map(([questionId, value]) => {
+      if (Array.isArray(value)) {
+        return {
+          question_id: parseInt(questionId),
+          option_ids: value,
+        };
+      }
+      return {
+        question_id: parseInt(questionId),
+        text: value,
+      };
+    });
+
+    const draftData: SaveDraftRequest = {
+      form_id: formId,
+      answers: formattedAnswers,
+    };
+
+    // Only save if the data has changed
+    if (JSON.stringify(draftData) !== JSON.stringify(lastSavedRef.current)) {
+      saveDraftMutation.mutate(draftData);
+      lastSavedRef.current = draftData;
+    }
+  };
+
   const autoSave = (answers: Record<number, any>) => {
+    // Store current answers
+    currentAnswersRef.current = answers;
+
     // Clear any existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Set a new timeout to save after 2 seconds of inactivity
+    // Set a new timeout to save after 1 second of inactivity
     saveTimeoutRef.current = setTimeout(() => {
-      const formattedAnswers = Object.entries(answers).map(([questionId, value]) => {
-        if (Array.isArray(value)) {
-          return {
-            question_id: parseInt(questionId),
-            option_ids: value,
-          };
-        }
-        return {
-          question_id: parseInt(questionId),
-          text: value,
-        };
-      });
-
-      const draftData: SaveDraftRequest = {
-        form_id: formId,
-        answers: formattedAnswers,
-      };
-
-      // Only save if the data has changed
-      if (JSON.stringify(draftData) !== JSON.stringify(lastSavedRef.current)) {
-        saveDraftMutation.mutate(draftData);
-        lastSavedRef.current = draftData;
-      }
-    }, 2000);
+      formatAndSaveDraft(currentAnswersRef.current);
+    }, 1000);
   };
 
-  // Cleanup timeout on unmount
+  // Save when component unmounts (e.g., returning to dashboard)
   useEffect(() => {
     return () => {
+      if (Object.keys(currentAnswersRef.current).length > 0) {
+        formatAndSaveDraft(currentAnswersRef.current);
+      }
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }

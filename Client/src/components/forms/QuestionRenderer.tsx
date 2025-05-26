@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 interface QuestionRendererProps {
   question: FormQuestion;
   value: any;
-  onChange: (value: any) => void;
+  onChange: (value: any, questionId?: number, isTextField?: boolean) => void;
   error?: string;
 }
 
@@ -15,7 +15,7 @@ export default function QuestionRenderer({ question, value, onChange, error }: Q
   const renderSingleChoice = () => (
     <RadioGroup
       value={value && value.length > 0 ? value[0].toString() : ''}
-      onValueChange={(newValue) => onChange([parseInt(newValue)])}
+      onValueChange={(newValue) => onChange([parseInt(newValue)], question.id, false)}
       className="space-y-3"
     >
       {question.options?.map((option) => (
@@ -39,9 +39,9 @@ export default function QuestionRenderer({ question, value, onChange, error }: Q
             onCheckedChange={(checked) => {
               const currentValue = Array.isArray(value) ? value : [];
               if (checked) {
-                onChange([...currentValue, option.id]);
+                onChange([...currentValue, option.id], question.id, false);
               } else {
-                onChange(currentValue.filter((id: number) => id !== option.id));
+                onChange(currentValue.filter((id: number) => id !== option.id), question.id, false);
               }
             }}
           />
@@ -56,7 +56,8 @@ export default function QuestionRenderer({ question, value, onChange, error }: Q
   const renderTextInput = () => (
     <Textarea
       value={value || ''}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value, question.id, true)}
+      onBlur={() => onChange(value, question.id, false)}
       placeholder="Enter your response..."
       className="min-h-[100px] resize-none"
     />

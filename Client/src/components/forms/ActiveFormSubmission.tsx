@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { PublicForm, DraftSubmission } from '@/lib/api';
 import { useFormAnswers } from '@/hooks/useFormAnswers';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { useQueryClient } from '@tanstack/react-query';
 import FormHeader from './FormHeader';
 import QuestionRenderer from './QuestionRenderer';
+import { useEffect } from 'react';
 
 interface ActiveFormSubmissionProps {
   form: PublicForm;
@@ -23,13 +23,14 @@ export default function ActiveFormSubmission({
   initialAnswers
 }: ActiveFormSubmissionProps) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { answers, validationErrors, updateAnswer, validateAnswers, formatAnswersForSubmission } = useFormAnswers(initialAnswers, form.questions);
   const { autoSave, isSaving } = useAutoSave(form.id);
 
-  const handleAnswerChange = (questionId: number, value: any) => {
+  const handleAnswerChange = (questionId: number, value: any, isTextField?: boolean) => {
     updateAnswer(questionId, value);
-    autoSave(answers);
+    if (!isTextField) {
+      autoSave(answers);
+    }
   };
 
   const handleSubmit = () => {
@@ -40,9 +41,17 @@ export default function ActiveFormSubmission({
   };
 
   const handleCancel = () => {
-    queryClient.invalidateQueries({ queryKey: ['user-dashboard'] });
+    // Save before navigating
+    autoSave(answers);
     navigate('/');
   };
+
+  // Save when component unmounts
+  useEffect(() => {
+    return () => {
+      autoSave(answers);
+    };
+  }, [answers]);
 
   return (
     <div className="py-6">
