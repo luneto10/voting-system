@@ -3,7 +3,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { formsApi, DashboardData, DashboardForm, ApiResponse } from '@/lib/api';
 import { FileText, Clock, CheckCircle, Activity } from 'lucide-react';
-import DashboardSearch from '@/components/search/DashboardSearch';
 import UserFormCard from '@/components/dashboard/UserFormCard';
 import LoadingCard from '@/components/common/LoadingCard';
 import EmptyState from '@/components/common/EmptyState';
@@ -88,10 +87,6 @@ export default function Dashboard() {
         <Button onClick={() => navigate('/polls')} variant="outline">
           Browse All Forms
         </Button>
-      </div>
-
-      <div className="max-w-md">
-        <DashboardSearch />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -12,7 +12,6 @@ import (
 
 type DashboardService interface {
 	GetDashboardData(userID uint) (*dto.DashboardData, error)
-	SearchForms(query string, userID uint) ([]dto.SearchFormResult, error)
 	UpdateUserFormStatus(userID uint, formID uint, status string) error
 }
 
@@ -147,40 +146,6 @@ func (s *DashboardServiceImpl) GetUserFormsWithStatus(userID uint) ([]dto.Dashbo
 	}
 
 	return dashboardForms, nil
-}
-
-func (s *DashboardServiceImpl) SearchForms(query string, userID uint) ([]dto.SearchFormResult, error) {
-	forms, err := s.dashboardRepository.SearchForms(query, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	results := make([]dto.SearchFormResult, len(forms))
-	for i, form := range forms {
-		if err := copier.Copy(&results[i], form); err != nil {
-			return nil, err
-		}
-
-		questions := make([]dto.GetQuestionResponse, len(form.Questions))
-		for j, question := range form.Questions {
-			if err := copier.Copy(&questions[j], question); err != nil {
-				return nil, err
-			}
-			questions[j].Type = string(question.Type)
-
-			options := make([]dto.GetOptionResponse, len(question.Options))
-			for k, option := range question.Options {
-				if err := copier.Copy(&options[k], option); err != nil {
-					return nil, err
-				}
-			}
-			questions[j].Options = options
-		}
-
-		results[i].Questions = questions
-	}
-
-	return results, nil
 }
 
 func (s *DashboardServiceImpl) UpdateUserFormStatus(userID uint, formID uint, status string) error {

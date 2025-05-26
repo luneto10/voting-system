@@ -14,7 +14,6 @@ type DashboardRepository interface {
 	GetUserFormsWithParticipation(userID uint) ([]*model.Form, error)
 	GetUserFormStatistics(userID uint) (available, inProgress, completed, recentActivity int, err error)
 	GetUserRecentActivity(userID uint, limit int) ([]*model.UserFormParticipation, error)
-	SearchForms(query string, userID uint) ([]*model.Form, error)
 }
 
 type DashboardRepositoryImpl struct {
@@ -107,17 +106,4 @@ func (r *DashboardRepositoryImpl) GetUserRecentActivity(userID uint, limit int) 
 		Find(&activities).Error
 
 	return activities, err
-}
-
-func (r *DashboardRepositoryImpl) SearchForms(query string, userID uint) ([]*model.Form, error) {
-	var forms []*model.Form
-	now := time.Now()
-
-	err := r.db.
-		Preload("Questions.Options").
-		Where("title ILIKE ? OR description ILIKE ?", "%"+query+"%", "%"+query+"%").
-		Where("start_at <= ? AND end_at >= ?", now, now).
-		Find(&forms).Error
-
-	return forms, err
 }

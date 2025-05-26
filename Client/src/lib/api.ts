@@ -249,11 +249,7 @@ export const formsApi = {
   deleteDraft: async (formId: number) => {
     const response = await api.delete<ApiResponse<{ message: string }>>(`/drafts/${formId}`);
     return response.data;
-  },
-  searchForms: async (query: string) => {
-    const response = await api.get<ApiResponse<PublicForm[]>>(`/dashboard/search?q=${encodeURIComponent(query)}`);
-    return response.data;
-  },
+  }
 };
 
 export default api; 

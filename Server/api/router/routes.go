@@ -34,7 +34,6 @@ func initializeRoutes(router *gin.Engine, handlers *Handler) {
 		dashboard := v1.Group("/dashboard")
 		{
 			dashboard.GET("", middleware.AuthMiddleware(), handlers.DashboardHandler.GetDashboard)
-			dashboard.GET("/search", middleware.AuthMiddleware(), handlers.DashboardHandler.SearchForms)
 			dashboard.PUT("/forms/:formId/status/:status", middleware.AuthMiddleware(), handlers.DashboardHandler.UpdateFormStatus)
 		}
 
