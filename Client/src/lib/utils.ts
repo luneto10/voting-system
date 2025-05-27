@@ -29,3 +29,59 @@ export function isValidDate(dateString: string | null | undefined): boolean {
     return false;
   }
 }
+
+interface PaginationResult<T> {
+  items: T[];
+  totalPages: number;
+  startIndex: number;
+  endIndex: number;
+}
+
+export function paginateItems<T>(
+  items: T[],
+  currentPage: number,
+  itemsPerPage: number
+): PaginationResult<T> {
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = items.slice(startIndex, endIndex);
+
+  return {
+    items: paginatedItems,
+    totalPages,
+    startIndex,
+    endIndex,
+  };
+}
+
+interface ServerPaginationResult {
+  totalPages: number;
+  startPage: number;
+  endPage: number;
+  hasStartEllipsis: boolean;
+  hasEndEllipsis: boolean;
+}
+
+export function calculateServerPagination(
+  currentPage: number,
+  totalPages: number,
+  maxVisiblePages: number = 5
+): ServerPaginationResult {
+  const halfVisible = Math.floor(maxVisiblePages / 2);
+  
+  let startPage = Math.max(1, currentPage - halfVisible);
+  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+  if (endPage - startPage + 1 < maxVisiblePages) {
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+
+  return {
+    totalPages,
+    startPage,
+    endPage,
+    hasStartEllipsis: startPage > 2,
+    hasEndEllipsis: endPage < totalPages - 1,
+  };
+}

@@ -163,14 +163,14 @@ export default function UserFormCard({ form, onContinueDraft }: UserFormCardProp
           )}
         </div>
 
-        <Button 
+        {form.status != 'completed' && <Button 
           onClick={handleClick}
           className="w-full"
           disabled={isExpired || isUpcoming || false}
-          variant={form.status === 'completed' ? 'outline' : 'default'}
+          variant='default'
         >
           {isExpired ? 'Expired' : isUpcoming ? 'Not Started' : getActionText()}
-        </Button>
+        </Button>}
       </CardContent>
     </Card>
 

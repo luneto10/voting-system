@@ -22,10 +22,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { calculateServerPagination } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 export default function Activity() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 10;
 
   const { data: activities, isLoading } = useQuery({
@@ -34,26 +38,22 @@ export default function Activity() {
   });
 
   const totalPages = activities?.data.total ? Math.ceil(activities.data.total / itemsPerPage) : 0;
+  const pagination = calculateServerPagination(page, totalPages);
+
+  const filteredActivities = activities?.data.data.filter((activity: Activity) =>
+    activity.form_title.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   const renderPaginationItems = () => {
     const items = [];
-    const maxVisiblePages = 5;
-    const halfVisible = Math.floor(maxVisiblePages / 2);
 
-    let startPage = Math.max(1, page - halfVisible);
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    if (startPage > 1) {
+    if (pagination.startPage > 1) {
       items.push(
         <PaginationItem key="1">
           <PaginationLink onClick={() => setPage(1)}>1</PaginationLink>
         </PaginationItem>
       );
-      if (startPage > 2) {
+      if (pagination.hasStartEllipsis) {
         items.push(
           <PaginationItem key="ellipsis-start">
             <PaginationEllipsis />
@@ -62,7 +62,7 @@ export default function Activity() {
       }
     }
 
-    for (let i = startPage; i <= endPage; i++) {
+    for (let i = pagination.startPage; i <= pagination.endPage; i++) {
       items.push(
         <PaginationItem key={i}>
           <PaginationLink
@@ -75,8 +75,8 @@ export default function Activity() {
       );
     }
 
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
+    if (pagination.endPage < totalPages) {
+      if (pagination.hasEndEllipsis) {
         items.push(
           <PaginationItem key="ellipsis-end">
             <PaginationEllipsis />
@@ -99,20 +99,31 @@ export default function Activity() {
     <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold">Activity History</h1>
-        <Select value={statusFilter} onValueChange={(value) => {
-          setStatusFilter(value);
-          setPage(1);
-        }}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Activities</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="deleted">Deleted</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="relative w-full sm:w-[300px]">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search activities..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={(value) => {
+            setStatusFilter(value);
+            setPage(1);
+          }}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Activities</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="deleted">Deleted</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Card className="w-full">
@@ -122,12 +133,12 @@ export default function Activity() {
         <CardContent className="px-4 sm:px-6">
           {isLoading ? (
             <LoadingCard message="Loading activities..." />
-          ) : activities?.data.data.length === 0 ? (
-            <EmptyState message="No activities found." />
+          ) : filteredActivities.length === 0 ? (
+            <EmptyState message={searchQuery ? "No activities match your search." : "No activities found."} />
           ) : (
             <>
               <div className="space-y-3">
-                {activities?.data.data.map((activity: Activity) => (
+                {filteredActivities.map((activity: Activity) => (
                   <ActivityItem key={`${activity.form_id}-${activity.completed_at || activity.last_modified}`} activity={activity} />
                 ))}
               </div>

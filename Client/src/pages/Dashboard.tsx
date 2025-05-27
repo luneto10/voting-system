@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { formsApi, DashboardData, DashboardForm, ApiResponse } from '@/lib/api';
-import { Clock, CheckCircle, Activity } from 'lucide-react';
+import { Clock, CheckCircle, Activity, Search } from 'lucide-react';
 import UserFormCard from '@/components/dashboard/UserFormCard';
 import LoadingCard from '@/components/common/LoadingCard';
 import EmptyState from '@/components/common/EmptyState';
@@ -10,9 +10,17 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { RecentActivityList } from "@/components/dashboard/RecentActivityList";
+import Pagination from '@/components/common/Pagination';
+import { useState } from 'react';
+import { paginateItems } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [inProgressPage, setInProgressPage] = useState(1);
+  const [completedPage, setCompletedPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const itemsPerPage = 6;
 
   const { data: dashboardData, isLoading, error } = useQuery<ApiResponse<DashboardData>>({
     queryKey: ['user-dashboard'],
@@ -77,15 +85,31 @@ export default function Dashboard() {
 
   const { statistics = defaultData.statistics, recent_activity = [], forms = [] } = dashboardData?.data || defaultData;
 
-  const inProgressForms = forms?.filter((f: DashboardForm) => f.status === 'in_progress') || [];
-  const completedForms = forms?.filter((f: DashboardForm) => f.status === 'completed') || [];
+  const filteredForms = forms.filter((form: DashboardForm) => 
+    form.form_title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const inProgressForms = filteredForms?.filter((f: DashboardForm) => f.status === 'in_progress') || [];
+  const completedForms = filteredForms?.filter((f: DashboardForm) => f.status === 'completed') || [];
+
+  const { items: paginatedInProgressForms, totalPages: inProgressTotalPages } = paginateItems(
+    inProgressForms,
+    inProgressPage,
+    itemsPerPage
+  );
+
+  const { items: paginatedCompletedForms, totalPages: completedTotalPages } = paginateItems(
+    completedForms,
+    completedPage,
+    itemsPerPage
+  );
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <Button onClick={() => navigate('/polls')} variant="outline">
-          Browse All My Pollse
+          Browse All My Polls
         </Button>
       </div>
 
@@ -110,7 +134,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{statistics?.total_completed ?? 0}</div>
             <p className="text-xs text-muted-foreground">
-              Forms you've finished
+              Polls you've finished
             </p>
           </CardContent>
         </Card>
@@ -138,7 +162,6 @@ export default function Dashboard() {
         <RecentActivityList activities={recent_activity} />
       </div>
 
-      {/* Forms organized by status */}
       <Tabs defaultValue="in-progress" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="in-progress" className="flex items-center gap-2">
@@ -150,26 +173,44 @@ export default function Dashboard() {
             Completed ({completedForms.length})
           </TabsTrigger>
         </TabsList>
+        <div className="relative w-full sm:w-[300px]">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search polls..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
+        </div>
 
         <TabsContent value="in-progress" className="space-y-4">
           {inProgressForms.length === 0 ? (
             <Card>
               <CardContent className="p-6">
                 <EmptyState 
-                  message="No forms in progress. Start a new form to see it here!" 
+                  message={searchQuery ? "No polls match your search." : "No polls in progress. Start a new poll to see it here!"} 
                 />
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {inProgressForms.map((form: DashboardForm) => (
-                <UserFormCard 
-                  key={form.form_id} 
-                  form={form} 
-                  onContinueDraft={handleContinueDraft}
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {paginatedInProgressForms.map((form: DashboardForm) => (
+                  <UserFormCard 
+                    key={form.form_id} 
+                    form={form} 
+                    onContinueDraft={handleContinueDraft}
+                  />
+                ))}
+              </div>
+              {inProgressTotalPages > 1 && (
+                <Pagination
+                  currentPage={inProgressPage}
+                  totalPages={inProgressTotalPages}
+                  onPageChange={setInProgressPage}
                 />
-              ))}
-            </div>
+              )}
+            </>
           )}
         </TabsContent>
 
@@ -178,16 +219,25 @@ export default function Dashboard() {
             <Card>
               <CardContent className="p-6">
                 <EmptyState 
-                  message="No completed forms yet. Complete a form to see your results here!" 
+                  message={searchQuery ? "No forms match your search." : "No completed forms yet. Complete a form to see your results here!"} 
                 />
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {completedForms.map((form: DashboardForm) => (
-                <UserFormCard key={form.form_id} form={form} />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {paginatedCompletedForms.map((form: DashboardForm) => (
+                  <UserFormCard key={form.form_id} form={form} />
+                ))}
+              </div>
+              {completedTotalPages > 1 && (
+                <Pagination
+                  currentPage={completedPage}
+                  totalPages={completedTotalPages}
+                  onPageChange={setCompletedPage}
+                />
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>
