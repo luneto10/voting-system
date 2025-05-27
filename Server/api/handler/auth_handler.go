@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -65,7 +66,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Set the JWT in cookie
-	c.SetCookie("token", jwtToken, 0, "/", "", false, true)
+	c.SetCookie("token", jwtToken, 0, "/", "", os.Getenv("GIN_MODE") == "release", true)
 
 	resp := &dto.LoginResponse{
 		User:         *userResp,
@@ -88,7 +89,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", newJWT, 0, "/", "", false, true)
+	c.SetCookie("token", newJWT, 0, "/", "", os.Getenv("GIN_MODE") == "release", true)
 
 	resp := &dto.RefreshTokenResponse{
 		AccessToken: newJWT,
@@ -108,7 +109,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", "", -1, "/", "", false, true)
+	c.SetCookie("token", "", -1, "/", "", os.Getenv("GIN_MODE") == "release", true)
 
 	schema.SendSuccess(c, "logout", nil)
 }
