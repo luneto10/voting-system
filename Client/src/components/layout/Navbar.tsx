@@ -31,6 +31,8 @@ export default function Navbar() {
     mutationFn: authApi.logout,
     onSuccess: () => {
       logout();
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       queryClient.clear();
       toast.success('Logged out successfully');
       navigate('/login');

@@ -23,9 +23,7 @@ func Initialize(db *gorm.DB) {
 			"Origin", "Content-Type", "Accept", "Authorization", "Cookie",
 			"X-Requested-With", "X-CSRF-Token",
 		},
-		ExposeHeaders:    []string{"Set-Cookie"},
 		AllowCredentials: true,
-		MaxAge:           12 * 60 * 60,
 	}))
 
 	handlers := initDependencies(db)

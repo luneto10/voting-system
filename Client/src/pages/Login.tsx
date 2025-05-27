@@ -45,9 +45,9 @@ export default function Login() {
         const user: User = response.data.user;
         setUser(user);
         toast.success('Login successful');
+        localStorage.setItem('access_token', response.data.access_token);
         localStorage.setItem('refresh_token', response.data.refresh_token);
         
-        // Check if we need to redirect back to a submission form
         const from = location.state?.from;
         if (from?.pathname && from.pathname.includes('/forms/') && from.pathname.includes('/submit')) {
           navigate(from.pathname, { replace: true });

@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -66,29 +64,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Definindo domínio corretamente
-	domain := ""
-	prodDomain := "voting-system-pcy5.onrender.com"
-	secure := false
-	if os.Getenv("GIN_MODE") == "release" {
-		domain = prodDomain
-		secure = true
-	}
-
-	log.Printf("Setting cookie with domain: %s, secure: %v, httpOnly: true", domain, secure)
-
-	// Configurando SameSite=None manualmente (usando Header direto, por garantia)
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "token",
-		Value:    jwtToken,
-		Path:     "/",
-		Domain:   domain,
-		MaxAge:   7 * 24 * 60 * 60,
-		Secure:   secure,
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-	})
-
 	resp := &dto.LoginResponse{
 		User:         *userResp,
 		AccessToken:  jwtToken,
@@ -110,25 +85,6 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	domain := ""
-	prodDomain := "voting-system-pcy5.onrender.com"
-	secure := false
-	if os.Getenv("GIN_MODE") == "release" {
-		domain = prodDomain
-		secure = true
-	}
-
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "token",
-		Value:    newJWT,
-		Path:     "/",
-		Domain:   domain,
-		MaxAge:   7 * 24 * 60 * 60,
-		Secure:   secure,
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-	})
-
 	resp := &dto.RefreshTokenResponse{
 		AccessToken: newJWT,
 	}
@@ -146,25 +102,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		schema.SendError(c, http.StatusInternalServerError, "Failed to logout")
 		return
 	}
-
-	domain := ""
-	prodDomain := "voting-system-pcy5.onrender.com"
-	secure := false
-	if os.Getenv("GIN_MODE") == "release" {
-		domain = prodDomain
-		secure = true
-	}
-
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "token",
-		Value:    "",
-		Path:     "/",
-		Domain:   domain,
-		MaxAge:   -1,
-		Secure:   secure,
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-	})
 
 	schema.SendSuccess(c, "logout", nil)
 }
