@@ -32,19 +32,18 @@ export default function ActiveFormSubmission({
   };
 
   const handleSubmit = () => {
+    if (isSubmitting) return;
     if (!validateAnswers(form)) return;
-    
     const formattedAnswers = formatAnswersForSubmission(form);
     onSubmit({ answers: formattedAnswers });
   };
 
+
   const handleCancel = () => {
-    // Save before navigating
     autoSave(answers);
     navigate('/');
   };
 
-  // Save when component unmounts
   useEffect(() => {
     return () => {
       autoSave(answers);

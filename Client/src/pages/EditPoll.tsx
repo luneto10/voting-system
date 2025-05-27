@@ -33,6 +33,22 @@ import { formsApi, ApiError, UpdateFormRequest } from '@/lib/api';
 import { toast } from 'sonner';
 import { DateRange } from 'react-day-picker';
 
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [matches, query]);
+
+  return matches;
+};
+
 const questionSchema = z.object({
   id: z.number().optional(),
   title: z.string().min(1, 'Question title is required'),
@@ -67,6 +83,7 @@ export default function EditPoll() {
   const queryClient = useQueryClient();
   const [date, setDate] = useState<DateRange | undefined>();
   const [deletedQuestionIds, setDeletedQuestionIds] = useState<number[]>([]);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const { data: form, isLoading } = useQuery({
     queryKey: ['form', id],
@@ -99,11 +116,14 @@ export default function EditPoll() {
   useEffect(() => {
     if (form?.data) {
       const formData = form.data;
+      const startDate = formData.startAt ? new Date(formData.startAt) : null;
+      const endDate = formData.endAt ? new Date(formData.endAt) : null;
+
       formInstance.reset({
         title: formData.title,
         description: formData.description || '',
-        startAt: formData.startAt ? new Date(formData.startAt) : null,
-        endAt: formData.endAt ? new Date(formData.endAt) : null,
+        startAt: startDate,
+        endAt: endDate,
         questions: formData.questions.map(q => ({
           id: q.id,
           title: q.title,
@@ -115,10 +135,10 @@ export default function EditPoll() {
         })),
       });
 
-      if (formData.startAt && formData.endAt) {
+      if (startDate && endDate) {
         setDate({
-          from: new Date(formData.startAt),
-          to: new Date(formData.endAt),
+          from: startDate,
+          to: endDate,
         });
       }
     }
@@ -283,33 +303,32 @@ export default function EditPoll() {
                       <FormLabel>Date Range</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !date && "text-muted-foreground"
-                              )}
-                            >
-                              {date?.from ? (
-                                date.to ? (
-                                  <>
-                                    {format(date.from, "LLL dd, y")} -{" "}
-                                    {format(date.to, "LLL dd, y")}
-                                  </>
-                                ) : (
-                                  format(date.from, "LLL dd, y")
-                                )
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !date && "text-muted-foreground"
+                            )}
+                          >
+                            {date?.from ? (
+                              date.to ? (
+                                <>
+                                  {format(date.from, "LLL dd, y")} -{" "}
+                                  {format(date.to, "LLL dd, y")}
+                                </>
                               ) : (
-                                <span>Pick a date range</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
+                                format(date.from, "LLL dd, y")
+                              )
+                            ) : (
+                              <span>Pick a date range</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="range"
+                            defaultMonth={date?.from}
                             selected={date}
                             onSelect={(range) => {
                               setDate(range);
@@ -320,12 +339,12 @@ export default function EditPoll() {
                                 formInstance.setValue('endAt', range.to);
                               }
                             }}
+                            numberOfMonths={isDesktop ? 2 : 1}
                             disabled={(date) => {
                               const today = new Date();
                               today.setHours(0, 0, 0, 0);
                               return date < today || date > new Date("2100-01-01");
                             }}
-                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>

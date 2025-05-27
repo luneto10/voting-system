@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
@@ -33,6 +33,22 @@ import { formsApi, ApiError } from '@/lib/api';
 import { toast } from 'sonner';
 import { DateRange } from 'react-day-picker';
 
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [matches, query]);
+
+  return matches;
+};
+
 const questionSchema = z.object({
   title: z.string().min(1, 'Question title is required'),
   type: z.enum(['single_choice', 'multiple_choice', 'text']),
@@ -63,6 +79,7 @@ export default function CreatePoll() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [date, setDate] = useState<DateRange | undefined>();
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -258,7 +275,7 @@ export default function CreatePoll() {
                                 form.setValue('endAt', range.to);
                               }
                             }}
-                            numberOfMonths={2}
+                            numberOfMonths={isDesktop ? 2 : 1}
                             disabled={(date) => {
                               const today = new Date();
                               today.setHours(0, 0, 0, 0);
