@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -70,14 +69,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	// Set the JWT in cookie
 	domain := ""
 	if os.Getenv("GIN_MODE") == "release" {
-		// Extract domain from the request origin
-		origin := c.GetHeader("Origin")
-		if origin != "" {
-			// Remove protocol and port if present
-			domain = strings.TrimPrefix(origin, "http://")
-			domain = strings.TrimPrefix(domain, "https://")
-			domain = strings.Split(domain, ":")[0]
-		}
+		domain = "voting-system-pcy5.onrender.com"
 	}
 
 	// Log cookie settings for debugging
@@ -123,12 +115,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 	domain := ""
 	if os.Getenv("GIN_MODE") == "release" {
-		origin := c.GetHeader("Origin")
-		if origin != "" {
-			domain = strings.TrimPrefix(origin, "http://")
-			domain = strings.TrimPrefix(domain, "https://")
-			domain = strings.Split(domain, ":")[0]
-		}
+		domain = "voting-system-pcy5.onrender.com"
 	}
 
 	// Set SameSite attribute
@@ -164,13 +151,10 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	domain := ""
 	if os.Getenv("GIN_MODE") == "release" {
-		origin := c.GetHeader("Origin")
-		if origin != "" {
-			domain = strings.TrimPrefix(origin, "https://")
-			domain = strings.Split(domain, ":")[0]
-		}
+		domain = "voting-system-pcy5.onrender.com"
 	}
 
+	// Set SameSite attribute
 	c.SetSameSite(http.SameSiteNoneMode)
 
 	c.SetCookie(
