@@ -32,12 +32,5 @@ func Initialize(db *gorm.DB) {
 
 	initializeRoutes(router, handlers)
 
-	router.Static("/assets", "../../../client/dist/assets")
-	router.StaticFile("/", "../../../client/dist/index.html")
-
-	router.NoRoute(func(c *gin.Context) {
-		c.File("../../../client/dist/index.html")
-	})
-
 	router.Run("0.0.0.0:8080")
 }
