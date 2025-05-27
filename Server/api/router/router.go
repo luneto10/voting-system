@@ -16,15 +16,14 @@ func Initialize(db *gorm.DB) {
 		panic(err)
 	}
 
-	// Configure CORS
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{cfg.FrontendURL}, // Ex: "https://voting-system-pcy5.onrender.com"
+		AllowOrigins: []string{cfg.FrontendURL},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
 			"Origin", "Content-Type", "Accept", "Authorization", "Cookie",
 			"X-Requested-With", "X-CSRF-Token",
 		},
-		ExposeHeaders:    []string{"Set-Cookie"}, // Adicione esta linha!
+		ExposeHeaders:    []string{"Set-Cookie"},
 		AllowCredentials: true,
 		MaxAge:           12 * 60 * 60,
 	}))
