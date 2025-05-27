@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -66,7 +67,19 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Set the JWT in cookie
-	c.SetCookie("token", jwtToken, 0, "/", "", os.Getenv("GIN_MODE") == "release", true)
+	domain := ""
+	if os.Getenv("GIN_MODE") == "release" {
+		// Extract domain from the request origin
+		origin := c.GetHeader("Origin")
+		if origin != "" {
+			// Remove protocol and port if present
+			domain = strings.TrimPrefix(origin, "http://")
+			domain = strings.TrimPrefix(domain, "https://")
+			domain = strings.Split(domain, ":")[0]
+		}
+	}
+
+	c.SetCookie("token", jwtToken, 7*24*60*60, "/", domain, os.Getenv("GIN_MODE") == "release", true)
 
 	resp := &dto.LoginResponse{
 		User:         *userResp,
@@ -89,7 +102,17 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", newJWT, 0, "/", "", os.Getenv("GIN_MODE") == "release", true)
+	domain := ""
+	if os.Getenv("GIN_MODE") == "release" {
+		origin := c.GetHeader("Origin")
+		if origin != "" {
+			domain = strings.TrimPrefix(origin, "http://")
+			domain = strings.TrimPrefix(domain, "https://")
+			domain = strings.Split(domain, ":")[0]
+		}
+	}
+
+	c.SetCookie("token", newJWT, 7*24*60*60, "/", domain, os.Getenv("GIN_MODE") == "release", true)
 
 	resp := &dto.RefreshTokenResponse{
 		AccessToken: newJWT,
@@ -109,7 +132,17 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", "", -1, "/", "", os.Getenv("GIN_MODE") == "release", true)
+	domain := ""
+	if os.Getenv("GIN_MODE") == "release" {
+		origin := c.GetHeader("Origin")
+		if origin != "" {
+			domain = strings.TrimPrefix(origin, "http://")
+			domain = strings.TrimPrefix(domain, "https://")
+			domain = strings.Split(domain, ":")[0]
+		}
+	}
+
+	c.SetCookie("token", "", -1, "/", domain, os.Getenv("GIN_MODE") == "release", true)
 
 	schema.SendSuccess(c, "logout", nil)
 }
