@@ -66,31 +66,28 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Set the JWT in cookie
+	// Definindo domínio corretamente
 	domain := ""
+	prodDomain := "voting-system-pcy5.onrender.com"
+	secure := false
 	if os.Getenv("GIN_MODE") == "release" {
-		domain = "voting-system-pcy5.onrender.com"
+		domain = prodDomain
+		secure = true
 	}
 
-	// Log cookie settings for debugging
-	log.Printf("Setting cookie with domain: %s, secure: %v, httpOnly: true", domain, os.Getenv("GIN_MODE") == "release")
+	log.Printf("Setting cookie with domain: %s, secure: %v, httpOnly: true", domain, secure)
 
-	// Set SameSite attribute
-	c.SetSameSite(http.SameSiteNoneMode)
-
-	// Set the cookie with explicit attributes
-	c.SetCookie(
-		"token",
-		jwtToken,
-		7*24*60*60, // 7 days
-		"/",
-		domain,
-		os.Getenv("GIN_MODE") == "release",
-		true,
-	)
-
-	// Log response headers for debugging
-	log.Printf("Response headers: %v", c.Writer.Header())
+	// Configurando SameSite=None manualmente (usando Header direto, por garantia)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "token",
+		Value:    jwtToken,
+		Path:     "/",
+		Domain:   domain,
+		MaxAge:   7 * 24 * 60 * 60,
+		Secure:   secure,
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	})
 
 	resp := &dto.LoginResponse{
 		User:         *userResp,
@@ -114,22 +111,23 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	}
 
 	domain := ""
+	prodDomain := "voting-system-pcy5.onrender.com"
+	secure := false
 	if os.Getenv("GIN_MODE") == "release" {
-		domain = "voting-system-pcy5.onrender.com"
+		domain = prodDomain
+		secure = true
 	}
 
-	// Set SameSite attribute
-	c.SetSameSite(http.SameSiteNoneMode)
-
-	c.SetCookie(
-		"token",
-		newJWT,
-		7*24*60*60,
-		"/",
-		domain,
-		os.Getenv("GIN_MODE") == "release",
-		true,
-	)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "token",
+		Value:    newJWT,
+		Path:     "/",
+		Domain:   domain,
+		MaxAge:   7 * 24 * 60 * 60,
+		Secure:   secure,
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	})
 
 	resp := &dto.RefreshTokenResponse{
 		AccessToken: newJWT,
@@ -150,22 +148,23 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	domain := ""
+	prodDomain := "voting-system-pcy5.onrender.com"
+	secure := false
 	if os.Getenv("GIN_MODE") == "release" {
-		domain = "voting-system-pcy5.onrender.com"
+		domain = prodDomain
+		secure = true
 	}
 
-	// Set SameSite attribute
-	c.SetSameSite(http.SameSiteNoneMode)
-
-	c.SetCookie(
-		"token",
-		"",
-		-1,
-		"/",
-		domain,
-		os.Getenv("GIN_MODE") == "release",
-		true,
-	)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Path:     "/",
+		Domain:   domain,
+		MaxAge:   -1,
+		Secure:   secure,
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	})
 
 	schema.SendSuccess(c, "logout", nil)
 }
