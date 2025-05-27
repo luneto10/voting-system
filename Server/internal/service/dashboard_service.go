@@ -148,43 +148,51 @@ func (s *DashboardServiceImpl) GetUserFormsWithStatus(userID uint) ([]dto.Dashbo
 }
 
 func (s *DashboardServiceImpl) UpdateUserFormStatus(userID uint, formID uint, status string) error {
-	participation, err := s.dashboardRepository.GetUserFormParticipation(userID, formID)
+    return s.dashboardRepository.WithTransaction(func(tx *gorm.DB) error {
+        participation, err := s.dashboardRepository.GetUserFormParticipationTx(tx, userID, formID)
+        now := time.Now()
 
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return err
-	}
+        if err != nil && err != gorm.ErrRecordNotFound {
+            return err
+        }
 
-	now := time.Now()
+        if participation == nil {
+            newParticipation := &model.UserFormParticipation{
+                FormID:       formID,
+                UserID:       userID,
+                Status:       status,
+                LastModified: now,
+            }
+            if status == "in_progress" {
+                newParticipation.StartedAt = &now
+            } else if status == "completed" {
+                newParticipation.CompletedAt = &now
+                newParticipation.StartedAt = &now
+            }
+            return tx.Create(newParticipation).Error
+        }
 
-	if participation == nil {
-		newParticipation := &model.UserFormParticipation{
-			FormID:       formID,
-			UserID:       userID,
-			Status:       status,
-			LastModified: now,
-		}
+        if participation.Status == "completed" && status == "in_progress" {
+            return nil
+        }
 
-		if status == "in_progress" {
-			newParticipation.StartedAt = &now
-		} else if status == "completed" {
-			newParticipation.CompletedAt = &now
-		}
+        participation.Status = status
+        participation.LastModified = now
 
-		return s.dashboardRepository.CreateUserFormParticipation(newParticipation)
-	}
+        if status == "in_progress" && participation.StartedAt == nil {
+            participation.StartedAt = &now
+        }
+        if status == "completed" {
+            participation.CompletedAt = &now
+            if participation.StartedAt == nil {
+                participation.StartedAt = &now
+            }
+        }
 
-	// Update existing participation
-	participation.Status = status
-	participation.LastModified = now
-
-	if status == "in_progress" && participation.StartedAt == nil {
-		participation.StartedAt = &now
-	} else if status == "completed" {
-		participation.CompletedAt = &now
-	}
-
-	return s.dashboardRepository.UpdateUserFormParticipation(participation)
+        return tx.Save(participation).Error
+    })
 }
+
 
 func (s *DashboardServiceImpl) GetUserFormParticipation(userID uint, formID uint) (*dto.FormParticipation, error) {
 	participation, err := s.dashboardRepository.GetUserFormParticipation(userID, formID)

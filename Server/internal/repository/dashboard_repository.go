@@ -17,6 +17,8 @@ type DashboardRepository interface {
 	GetUserRecentActivity(userID uint, limit int) ([]*model.UserFormParticipation, error)
 	DeleteFormParticipation(userID uint, formID uint) error
 	GetUserActivities(userID uint, status string, page, perPage int) ([]*model.UserFormParticipation, int64, error)
+	WithTransaction(fn func(tx *gorm.DB) error) error
+	GetUserFormParticipationTx(tx *gorm.DB, userID, formID uint) (*model.UserFormParticipation, error)
 }
 
 type DashboardRepositoryImpl struct {
@@ -25,6 +27,19 @@ type DashboardRepositoryImpl struct {
 
 func NewDashboardRepository(db *gorm.DB) DashboardRepository {
 	return &DashboardRepositoryImpl{db: db}
+}
+
+func (r *DashboardRepositoryImpl) WithTransaction(fn func(tx *gorm.DB) error) error {
+	return r.db.Transaction(fn)
+}
+
+func (r *DashboardRepositoryImpl) GetUserFormParticipationTx(tx *gorm.DB, userID, formID uint) (*model.UserFormParticipation, error) {
+	var participation model.UserFormParticipation
+	err := tx.Where("user_id = ? AND form_id = ?", userID, formID).First(&participation).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	return &participation, err
 }
 
 func (r *DashboardRepositoryImpl) GetUserFormParticipation(userID uint, formID uint) (*model.UserFormParticipation, error) {
