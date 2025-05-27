@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -79,7 +80,25 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		}
 	}
 
-	c.SetCookie("token", jwtToken, 7*24*60*60, "/", domain, os.Getenv("GIN_MODE") == "release", true)
+	// Log cookie settings for debugging
+	log.Printf("Setting cookie with domain: %s, secure: %v, httpOnly: true", domain, os.Getenv("GIN_MODE") == "release")
+
+	// Set SameSite attribute
+	c.SetSameSite(http.SameSiteNoneMode)
+
+	// Set the cookie with explicit attributes
+	c.SetCookie(
+		"token",
+		jwtToken,
+		7*24*60*60, // 7 days
+		"/",
+		domain,
+		os.Getenv("GIN_MODE") == "release",
+		true,
+	)
+
+	// Log response headers for debugging
+	log.Printf("Response headers: %v", c.Writer.Header())
 
 	resp := &dto.LoginResponse{
 		User:         *userResp,
@@ -112,7 +131,18 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		}
 	}
 
-	c.SetCookie("token", newJWT, 7*24*60*60, "/", domain, os.Getenv("GIN_MODE") == "release", true)
+	// Set SameSite attribute
+	c.SetSameSite(http.SameSiteNoneMode)
+
+	c.SetCookie(
+		"token",
+		newJWT,
+		7*24*60*60,
+		"/",
+		domain,
+		os.Getenv("GIN_MODE") == "release",
+		true,
+	)
 
 	resp := &dto.RefreshTokenResponse{
 		AccessToken: newJWT,
@@ -136,13 +166,22 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	if os.Getenv("GIN_MODE") == "release" {
 		origin := c.GetHeader("Origin")
 		if origin != "" {
-			domain = strings.TrimPrefix(origin, "http://")
-			domain = strings.TrimPrefix(domain, "https://")
+			domain = strings.TrimPrefix(origin, "https://")
 			domain = strings.Split(domain, ":")[0]
 		}
 	}
 
-	c.SetCookie("token", "", -1, "/", domain, os.Getenv("GIN_MODE") == "release", true)
+	c.SetSameSite(http.SameSiteNoneMode)
+
+	c.SetCookie(
+		"token",
+		"",
+		-1,
+		"/",
+		domain,
+		os.Getenv("GIN_MODE") == "release",
+		true,
+	)
 
 	schema.SendSuccess(c, "logout", nil)
 }
