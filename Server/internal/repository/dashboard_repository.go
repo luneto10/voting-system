@@ -42,11 +42,17 @@ func (r *DashboardRepositoryImpl) GetUserFormParticipation(userID uint, formID u
 }
 
 func (r *DashboardRepositoryImpl) UpdateUserFormParticipation(participation *model.UserFormParticipation) error {
-	return r.db.Save(participation).Error
+	if err := r.db.Save(participation).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *DashboardRepositoryImpl) CreateUserFormParticipation(participation *model.UserFormParticipation) error {
-	return r.db.Create(participation).Error
+	if err := r.db.Create(participation).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *DashboardRepositoryImpl) GetUserFormsWithParticipation(userID uint) ([]*model.Form, error) {

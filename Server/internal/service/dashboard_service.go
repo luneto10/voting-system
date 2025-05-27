@@ -157,7 +157,6 @@ func (s *DashboardServiceImpl) UpdateUserFormStatus(userID uint, formID uint, st
 	now := time.Now()
 
 	if participation == nil {
-		// Create new participation record
 		newParticipation := &model.UserFormParticipation{
 			FormID:       formID,
 			UserID:       userID,

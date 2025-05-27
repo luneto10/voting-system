@@ -38,6 +38,7 @@ func NewFormSubmissionService(
 }
 
 func (s *FormSubmissionServiceImpl) SubmitForm(formID uint, userID uint, answers []dto.AnswerSubmission) (*model.Submission, error) {
+
 	// First, verify that the form exists
 	form, err := s.formService.GetForm(formID)
 	if err != nil {
@@ -93,6 +94,7 @@ func (s *FormSubmissionServiceImpl) SubmitForm(formID uint, userID uint, answers
 
 	submission.Answers = modelAnswers
 
+	
 	if err := s.formRepository.CreateSubmission(submission); err != nil {
 		return nil, err
 	}

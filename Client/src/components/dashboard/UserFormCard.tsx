@@ -74,7 +74,7 @@ export default function UserFormCard({ form, onContinueDraft }: UserFormCardProp
     if (form.status === 'in_progress' && onContinueDraft) {
       onContinueDraft(form.form_id);
     } else {
-      navigate(`/forms/${form.form_id}/submit`);
+      navigate(`/polls/${form.form_id}/submit`);
     }
   };
 
